@@ -1,3 +1,4 @@
+#include "../include/lexer.h"
 #include "../include/utils.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,6 +14,7 @@ int main(int argc, char *argv[]) {
 
   source_code = read_file(argv[1]);
   printf("Source code:\n %s\n", source_code);
+  lex(source_code);
 
   return 0;
 }
