@@ -1,13 +1,18 @@
+#include "../include/utils.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 int main(int argc, char *argv[]) {
-  int i;
-  printf("Program name: %s\n", argv[0]);
-
-  printf("Command-line arguments:\n");
-  for (i = 1; i < argc; ++i) {
-    printf("arg%d: %s\n", i, argv[i]);
+  char *source_code = (char *)malloc(100 * sizeof(char));
+  if (argc < 2) {
+    fprintf(stderr, "Usage: %s <filename>\n", argv[0]);
+    exit(EXIT_FAILURE);
   }
+
+  printf("Reading File: %s\n", argv[1]);
+
+  source_code = read_file(argv[1]);
+  printf("Source code:\n %s\n", source_code);
 
   return 0;
 }
