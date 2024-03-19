@@ -10,24 +10,26 @@ const char *pythonKeywordsList[] = {
     "import", "in",     "is",     "lambda",  "not",   "or",   "pass",   "print",
     "raise",  "return", "try",    "while",   "with",  "yield"};
 
-const char *pythonPunctList[] = {
-    ".",   ";",   ":",  "!",  "?",   "/",  "\\", ",",  "@",  "$",
-    "&",   ")",   "(",  "\"", "#",   "[",  "]",  "{",  "}",  "=",
-    "+=",  "-=",  "*=", "/=", "//=", "%=", "&=", "|=", "^=", ">>=",
-    "<<=", "**=", "+",  "-",  "==",  "\n", "\t", NULL};
+const char *pythonOperatorsList[] = {"+",  "-",  "*",  "**", "/",  "//", "%",
+                                     "@",  "<<", ">>", "&",  "|",  "^",  "~",
+                                     ":=", "<",  ">",  "<=", ">=", "==", "!="};
 
-Token *create_token(PythonTokenType type, const char *lexeme, int line_number) {
-  Token *token = (Token *)malloc(sizeof(Token));
-  token->type = type;
-  token->lexeme = strdup(lexeme);
-  token->line_number = line_number;
-  return token;
-}
+const char *pythonDelimitersList[] = {
+    "(",  ")",  "[",  "]",  "{",  "}",  ",",  ":",  ".",
+    ";",  "@",  "=",  "+=", "-=", "*=", "/=", "//", "%=",
+    "@=", "&=", "|=", "^=", ">>", "<<", "**="};
 
-void free_token(Token *token) {
-  free(token->lexeme);
-  free(token);
-}
+const char *specialPythonTokensList[] = {"'", "\"", "#", "\\"};
+const char *unusedPythonTokensList[] = {"$", "?", "`"};
+
+/*
+Python token priority:
+1. Keywords
+2. Operators
+3. Literals
+4. Identifiers
+5. Punctuation
+*/
 
 PythonTokenType is_python_keyword(const char *lexeme) {
   int i;
@@ -37,6 +39,36 @@ PythonTokenType is_python_keyword(const char *lexeme) {
     }
   }
 
+  return UNKNOWN;
+}
+
+PythonTokenType is_python_operator(const char *lexeme) {
+  int i;
+  for (i = 0; i < numPythonOperators; i++) {
+    if (strcmp(lexeme, pythonOperatorsList[i]) == 0) {
+      return i + numPythonKeywords;
+    }
+  }
+  return UNKNOWN;
+}
+
+PythonTokenType is_python_delimiter(const char *lexeme) {
+  int i;
+  for (i = 0; i < numPythonDelimiters; i++) {
+    if (strcmp(lexeme, pythonDelimitersList[i]) == 0) {
+      return i + numPythonKeywords + numPythonOperators;
+    }
+  }
+  return UNKNOWN;
+}
+
+PythonTokenType is_python_special(const char *lexeme) {
+  int i;
+  for (i = 0; i < numSpecialPythonTokens; i++) {
+    if (strcmp(lexeme, pythonDelimitersList[i]) == 0) {
+      return i + numPythonKeywords + numPythonOperators + numPythonDelimiters;
+    }
+  }
   return UNKNOWN;
 }
 
@@ -68,7 +100,13 @@ int lex(char *source_code) {
       candidate_match_length = i - current_position + 1;
 
       if ((candidate_token_type = is_python_keyword(candidate_lexeme)) !=
-          UNKNOWN) {
+              UNKNOWN ||
+          (candidate_token_type = is_python_operator(candidate_lexeme)) !=
+              UNKNOWN ||
+          (candidate_token_type = is_python_delimiter(candidate_lexeme)) !=
+              UNKNOWN ||
+          (candidate_token_type = is_python_special(candidate_lexeme)) !=
+              UNKNOWN) {
         token_type = candidate_token_type;
         longest_match = candidate_match_length;
         strcpy(matched_lexeme, candidate_lexeme);
@@ -108,4 +146,17 @@ int lex(char *source_code) {
   free(source_code);
 
   return 0;
+}
+
+Token *create_token(PythonTokenType type, const char *lexeme, int line_number) {
+  Token *token = (Token *)malloc(sizeof(Token));
+  token->type = type;
+  token->lexeme = strdup(lexeme);
+  token->line_number = line_number;
+  return token;
+}
+
+void free_token(Token *token) {
+  free(token->lexeme);
+  free(token);
 }
