@@ -2,7 +2,8 @@
 #define LEXER_H
 #include "python_tokens.h"
 
-typedef struct {
+typedef struct
+{
   PythonTokenType type;
   char *lexeme;
   int line_number;

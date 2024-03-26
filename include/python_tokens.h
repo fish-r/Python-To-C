@@ -98,7 +98,10 @@ typedef enum  {
   PYTOK_BACKTICK,
 
   /* Unknown */
-  UNKNOWN
+  UNKNOWN,
+
+  /* Identifiers */
+  PYTOK_IDENTIFIER
 }PythonTokenType;
 
 #endif /* PYTHON_TOKENS_H */
