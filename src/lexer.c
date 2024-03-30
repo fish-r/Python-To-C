@@ -76,7 +76,7 @@ int lex(char *source_code) {
   size_t i;
   PythonTokenType candidate_token_type = UNKNOWN;
   size_t candidate_match_length;
-  Token **token_stream = NULL;
+  PythonToken **token_stream = NULL;
   size_t token_count = 0;
 
   size_t source_code_length = strlen(source_code);
@@ -114,13 +114,13 @@ int lex(char *source_code) {
     }
 
     if (token_type != UNKNOWN) {
-      Token *token =
+      PythonToken *token =
           create_token(token_type, matched_lexeme, current_line_number);
-      token_stream =
-          (Token **)realloc(token_stream, (token_count + 1) * sizeof(Token *));
+      token_stream = (PythonToken **)realloc(
+          token_stream, (token_count + 1) * sizeof(PythonToken *));
       token_stream[token_count] = token;
       token_count++;
-      printf("Token { type: %d, lexeme: '%s', line: '%d'}\n", token->type,
+      printf("PythonToken { type: %d, lexeme: '%s', line: '%d'}\n", token->type,
              token->lexeme, token->line_number);
       current_position += longest_match;
     } else {
@@ -148,15 +148,16 @@ int lex(char *source_code) {
   return 0;
 }
 
-Token *create_token(PythonTokenType type, const char *lexeme, int line_number) {
-  Token *token = (Token *)malloc(sizeof(Token));
+PythonToken *create_token(PythonTokenType type, const char *lexeme,
+                          int line_number) {
+  PythonToken *token = (PythonToken *)malloc(sizeof(PythonToken));
   token->type = type;
   token->lexeme = strdup(lexeme);
   token->line_number = line_number;
   return token;
 }
 
-void free_token(Token *token) {
+void free_token(PythonToken *token) {
   free(token->lexeme);
   free(token);
 }

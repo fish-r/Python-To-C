@@ -1,65 +1,97 @@
 #ifndef C_TOKENS_H
 #define C_TOKENS_H
 
-/*
-enum COperators { ADD, SUB, MUL, DIV, EQ, EQEQ, BIT_AND, LOG_AND, BIT_OR, LOG_OR, ADD_ASSIGN };
-const char* cOperators[] = {
-  "+",
-  "-",
-  "*",
-  "/",
-  "==",
-  "===",
-  "&",
-  "&&",
-  "|",
-  "||",
-  "+="
-};
-
-const char* cPunctuations[] = {
-  "(",
-  ")",
-  ";"
-};
-
-
-const char* cSpecialSymbols[] = {
-  "{",
-  "}",
-  "[",
-  "]",
-  "<",
-  ">"
-};
-
-// CKeywordsList
-const char* cKeywordsList[] = {
-  "auto", "double", "int", "struct",
-  "break", "else", "long", "switch",
-  "case", "enum", "register", "typedef",
-  "char", "extern", "return", "union",
-  "const", "float", "short", "unsigned",
-  "continue", "for", "signed", "void",
-  "default", "goto", "sizeof", "volatile",
-  "do", "if", "static", "while"
-};
-
-// enum COperators
-enum CPunctuations { LEFT_PAREN, RIGHT_PAREN, END_OF_LINE };
-enum CLiterals { LITERAL_INT, LITERAL_FLOAT, LITERAL_CHAR, LITERAL_STRING };
-enum CComments { BLOCK_COMMENT_START, BLOCK_COMMENT_END };
-
 
 typedef enum {
-  KEYWORDS,
-  OPERATORS,
-  CONSTANTS,
-  STRINGS,
-  IDENTIFIERS,
-  SPECIAL_SYMBOLS,
-  UNKNOWN
+  /* Keywords */
+  C_KEYWORD_AND,
+  C_KEYWORD_AS,
+  C_KEYWORD_ASSERT,
+  C_KEYWORD_BREAK,
+  C_KEYWORD_CLASS,
+  C_KEYWORD_DEF,
+  C_KEYWORD_DEL,
+  C_KEYWORD_ELIF,
+  C_KEYWORD_ELSE,
+  C_KEYWORD_EXCEPT,
+  C_KEYWORD_EXEC,
+  C_KEYWORD_FINALLY,
+  C_KEYWORD_FOR,
+  C_KEYWORD_FROM,
+  C_KEYWORD_GLOBAL,
+  C_KEYWORD_IF,
+  C_KEYWORD_IMPORT,
+  C_KEYWORD_IN,
+  C_KEYWORD_IS,
+  C_KEYWORD_LAMBDA,
+  C_KEYWORD_NOT,
+  C_KEYWORD_OR,
+  C_KEYWORD_PASS,
+  C_KEYWORD_PRINT,
+  C_KEYWORD_RAISE,
+  C_KEYWORD_RETURN,
+  C_KEYWORD_TRY,
+  C_KEYWORD_WHILE,
+  C_KEYWORD_WITH,
+  C_KEYWORD_YIELD,
+
+  /* Operators */
+  C_OPERATOR_PLUS,
+  C_OPERATOR_MINUS,
+  C_OPERATOR_MULTIPLY,
+  C_OPERATOR_POWER,
+  C_OPERATOR_DIVIDE,
+  C_OPERATOR_FLOORDIVIDE,
+  C_OPERATOR_MODULO,
+  C_OPERATOR_MATRIXMULTIPLY,
+  C_OPERATOR_LEFTSHIFT,
+  C_OPERATOR_RIGHTSHIFT,
+  C_OPERATOR_BITWISEAND,
+  C_OPERATOR_BITWISEOR,
+  C_OPERATOR_BITWISEXOR,
+  C_OPERATOR_BITWISENOT,
+  C_OPERATOR_WALRUS,
+
+  /* Delimiters */
+  C_DELIMITER_LEFTPARENTHESIS,
+  C_DELIMITER_RIGHTPARENTHESIS,
+  C_DELIMITER_LEFTSQUAREBRACKET,
+  C_DELIMITER_RIGHTSQUAREBRACKET,
+  C_DELIMITER_LEFTCURLYBRACE,
+  C_DELIMITER_RIGHTCURLYBRACE,
+  C_DELIMITER_COMMA,
+  C_DELIMITER_COLON,
+  C_DELIMITER_DOT,
+  C_DELIMITER_SEMICOLON,
+  C_DELIMITER_AT,
+  C_DELIMITER_ASSIGNMENT,
+  C_DELIMITER_PLUSEQUAL,
+  C_DELIMITER_MINUSEQUAL,
+  C_DELIMITER_MULTIPLYEQUAL,
+  C_DELIMITER_DIVIDEEQUAL,
+  C_DELIMITER_FLOORDIVIDEEQUAL,
+  C_DELIMITER_MODULOEQUAL,
+  C_DELIMITER_MATRIXMULTIPLYEQUAL,
+  C_DELIMITER_BITWISEANDEQUAL,
+  C_DELIMITER_BITWISEOREQUAL,
+  C_DELIMITER_BITWISEXOREQUAL,
+  C_DELIMITER_RIGHTSHIFTEQUAL,
+  C_DELIMITER_LEFTSHIFTEQUAL,
+  C_DELIMITER_POWEREQUAL,
+
+  /* Special Tokens */
+  C_SPECIAL_SINGLEQUOTE,
+  C_SPECIAL_DOUBLEQUOTE,
+  C_SPECIAL_HASH,
+  C_SPECIAL_BACKSLASH,
+
+  /* Unused Tokens */
+  C_UNUSED_DOLLAR,
+  C_UNUSED_QUESTIONMARK,
+  C_UNUSED_BACKTICK,
+
+  /* Unknown */
+  C_UNKNOWN
 } CTokenType;
-*/
 
 #endif /* C_TOKENS_H */
