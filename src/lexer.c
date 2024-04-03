@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/_types/_null.h>
+#include <stddef.h>
 
 const char *pythonKeywordsList[] = {
     "and", "as", "assert", "break", "class", "def", "del", "elif",
@@ -95,25 +95,30 @@ int is_alpha(char c)
 {
   if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))
   {
-    return 1; // Character is an alphabet
+    return 1; /*Character is an alphabet*/
   }
   else
   {
-    return 0; // Character is not an alphabet
+    return 0; /* Character is not an alphabet*/
   }
 }
 
 int is_alphanumeric(char c)
 {
-  // Check if the character is between 'A' and 'Z', 'a' and 'z', or '0' and '9'
+  /* Check if the character is between 'A' and 'Z', 'a' and 'z', or '0' and '9'*/
   if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9'))
   {
-    return 1; // Character is alphanumeric
+    return 1; /* Character is alphanumeric*/
   }
   else
   {
-    return 0; // Character is not alphanumeric
+    return 0; /*Character is not alphanumeric*/
   }
+}
+
+int is_digit(char c)
+{
+  return c >= '0' && c <= '9';
 }
 
 PythonTokenType is_python_identifier(const char *lexeme)
@@ -151,10 +156,94 @@ PythonTokenType is_python_identifier(const char *lexeme)
         state = REJECT;
       }
       break;
+    case REJECT:
+      break;
     }
+
     lexeme++;
   }
   return (state == WORD) ? PYTOK_IDENTIFIER : UNKNOWN;
+}
+
+PythonTokenType is_python_string(const char *lexeme, size_t *matched_length)
+{
+  char quote = *lexeme;
+  size_t length = 0;
+  /* check if it starts with ' or " , then stop when it encounters the same quote*/
+  if (quote == '\'' || quote == '"')
+  {
+    const char *ptr = lexeme + 1;
+    length++;
+    while (*ptr != quote && *ptr != '\0')
+    {
+      ptr++;
+      length++;
+    }
+    if (*ptr == quote)
+    {
+      length++;
+      *matched_length = length;
+      return PYTOK_STRING;
+    }
+  }
+  *matched_length = 0;
+  return UNKNOWN;
+}
+
+PythonTokenType is_python_numeric(const char *lexeme, size_t *matched_length)
+{
+  size_t length = 0;
+  int decimal_point_count = 0;
+
+  /* same logic as is_python_string*/
+  /* check if the first character is a digit or a minus sign */
+  if (*lexeme == '-' || is_digit(*lexeme))
+  {
+    const char *ptr = lexeme;
+    if (*ptr == '-')
+      ptr++;
+    while (is_digit(*ptr) || *ptr == '.')
+    {
+      if (*ptr == '.')
+      {
+        decimal_point_count++;
+        if (decimal_point_count > 1)
+        {
+          *matched_length = 0;
+          return UNKNOWN;
+        }
+      }
+      ptr++;
+      length++;
+    }
+
+    if (length > 0)
+    {
+      *matched_length = length;
+      return PYTOK_NUMERIC;
+    }
+  }
+
+  *matched_length = 0;
+  return UNKNOWN;
+}
+
+PythonTokenType is_python_boolean(const char *lexeme)
+{
+  if (strcmp(lexeme, "True") == 0 || strcmp(lexeme, "False") == 0)
+  {
+    return PYTOK_BOOLEAN;
+  }
+  return UNKNOWN;
+}
+
+PythonTokenType is_python_none(const char *lexeme)
+{
+  if (strcmp(lexeme, "None") == 0)
+  {
+    return PYTOK_NONE;
+  }
+  return UNKNOWN;
 }
 
 int lex(char *source_code)
@@ -194,11 +283,28 @@ int lex(char *source_code)
           (candidate_token_type = is_python_delimiter(candidate_lexeme)) !=
               UNKNOWN ||
           (candidate_token_type = is_python_special(candidate_lexeme)) !=
+              UNKNOWN ||
+          (candidate_token_type = is_python_boolean(candidate_lexeme)) !=
+              UNKNOWN ||
+          (candidate_token_type = is_python_none(candidate_lexeme)) !=
               UNKNOWN)
       {
         token_type = candidate_token_type;
         longest_match = candidate_match_length;
         strcpy(matched_lexeme, candidate_lexeme);
+      }
+      else if ((candidate_token_type = is_python_numeric(candidate_lexeme, &candidate_match_length)) != UNKNOWN)
+      {
+        token_type = candidate_token_type;
+        longest_match = candidate_match_length;
+        strncpy(matched_lexeme, candidate_lexeme, candidate_match_length);
+      }
+      else if ((candidate_token_type = is_python_string(candidate_lexeme, &candidate_match_length)) !=
+               UNKNOWN)
+      {
+        token_type = candidate_token_type;
+        longest_match = candidate_match_length;
+        strncpy(matched_lexeme, candidate_lexeme, candidate_match_length);
       }
     }
 

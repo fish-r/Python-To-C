@@ -1,6 +1,6 @@
 #ifndef PYTHON_TOKENS_H
 #define PYTHON_TOKENS_H
-#include <sys/_types/_null.h>
+#include <stddef.h>
 
 /* Python Tokens and Data */
 #define numPythonKeywords 30
@@ -101,7 +101,13 @@ typedef enum  {
   UNKNOWN,
 
   /* Identifiers */
-  PYTOK_IDENTIFIER
+  PYTOK_IDENTIFIER,
+
+  /* Literals */
+  PYTOK_NUMERIC,
+  PYTOK_STRING,
+  PYTOK_BOOLEAN,
+  PYTOK_NONE
 }PythonTokenType;
 
 #endif /* PYTHON_TOKENS_H */
