@@ -375,6 +375,8 @@ int lex(char *source_code)
           (candidate_token_type = is_python_boolean(candidate_lexeme)) !=
               UNKNOWN ||
           (candidate_token_type = is_python_none(candidate_lexeme)) !=
+              UNKNOWN ||
+          (candidate_token_type = is_python_identifier(candidate_lexeme)) !=
               UNKNOWN)
       {
         token_type = candidate_token_type;
