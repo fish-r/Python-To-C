@@ -239,7 +239,6 @@ PythonTokenType is_python_numeric(const char *lexeme, size_t *matched_length)
   return UNKNOWN;
 }
 
-
 PythonTokenType is_python_boolean(const char *lexeme)
 {
   if (strcmp(lexeme, "True") == 0 || strcmp(lexeme, "False") == 0)
@@ -299,6 +298,8 @@ int lex(char *source_code)
           (candidate_token_type = is_python_boolean(candidate_lexeme)) !=
               UNKNOWN ||
           (candidate_token_type = is_python_none(candidate_lexeme)) !=
+              UNKNOWN ||
+          (candidate_token_type = is_python_identifier(candidate_lexeme)) !=
               UNKNOWN)
       {
         token_type = candidate_token_type;
