@@ -15,7 +15,7 @@ const char *pythonOperatorsList[] = {"+", "-", "*", "**", "/", "//", "%",
                                      ":=", "<", ">", "<=", ">=", "==", "!="};
 
 const char *pythonDelimitersList[] = {
-    "(", ")", "[", "]", "{", "}", ",", ":", ".",
+    "(", ")", "{", "}", ",", ":", ".",
     ";", "@", "=", "+=", "-=", "*=", "/=", "//", "%=",
     "@=", "&=", "|=", "^=", ">>", "<<", "**="};
 
@@ -119,6 +119,11 @@ int is_alphanumeric(char c)
 int is_digit(char c)
 {
   return c >= '0' && c <= '9';
+}
+
+int is_whitespace(char c)
+{
+  return c == ' ' || c == '\t' || c == '\n' || c == '\r';
 }
 
 PythonTokenType is_python_identifier(const char *lexeme)
@@ -239,7 +244,6 @@ PythonTokenType is_python_numeric(const char *lexeme, size_t *matched_length)
   return UNKNOWN;
 }
 
-
 PythonTokenType is_python_boolean(const char *lexeme)
 {
   if (strcmp(lexeme, "True") == 0 || strcmp(lexeme, "False") == 0)
@@ -255,6 +259,78 @@ PythonTokenType is_python_none(const char *lexeme)
   {
     return PYTOK_NONE;
   }
+  return UNKNOWN;
+}
+
+PythonTokenType is_python_list(const char *lexeme, size_t *matched_length)
+{
+  size_t length = 0;
+  int in_quotes = 0;
+  int is_int_list = 1;
+  int is_float_list = 1;
+
+  while (is_whitespace(*lexeme))
+  {
+    lexeme++;
+    length++;
+  }
+
+  if (*lexeme == '[')
+  {
+    lexeme++;
+    length++;
+
+    while (*lexeme != '\0')
+    {
+      if (*lexeme == '"')
+      {
+        in_quotes = !in_quotes;
+      }
+
+      if (!in_quotes && is_whitespace(*lexeme))
+      {
+        lexeme++;
+        length++;
+        continue;
+      }
+      
+      if (*lexeme == ']' && !in_quotes)
+      {
+        length++;
+        *matched_length = length;
+
+        if (is_int_list)
+        {
+          return PYTOK_LIST_INT;
+        }
+        else if (is_float_list)
+        {
+          return PYTOK_LIST_FLOAT;
+        }
+        else
+        {
+          return PYTOK_LIST_STR;
+        }
+      }
+
+      if (!in_quotes && *lexeme != ',' && *lexeme != '[' && *lexeme != ']')
+      {
+        if (*lexeme != '-' && !is_digit(*lexeme))
+        {
+          is_int_list = 0;
+        }
+        if (!is_digit(*lexeme) && *lexeme != '.' && *lexeme != '-')
+        {
+          is_float_list = 0;
+        }
+      }
+
+      lexeme++;
+      length++;
+    }
+  }
+
+  *matched_length = 0;
   return UNKNOWN;
 }
 
@@ -305,14 +381,12 @@ int lex(char *source_code)
         longest_match = candidate_match_length;
         strcpy(matched_lexeme, candidate_lexeme);
       }
-      else if ((candidate_token_type = is_python_numeric(candidate_lexeme, &candidate_match_length)) != UNKNOWN)
-      {
-        token_type = candidate_token_type;
-        longest_match = candidate_match_length;
-        strncpy(matched_lexeme, candidate_lexeme, candidate_match_length);
-      }
-      else if ((candidate_token_type = is_python_string(candidate_lexeme, &candidate_match_length)) !=
-               UNKNOWN)
+      else if ((candidate_token_type = is_python_numeric(candidate_lexeme, &candidate_match_length)) !=
+                   UNKNOWN ||
+               (candidate_token_type = is_python_string(candidate_lexeme, &candidate_match_length)) !=
+                   UNKNOWN ||
+               (candidate_token_type = is_python_list(candidate_lexeme, &candidate_match_length)) !=
+                   UNKNOWN)
       {
         token_type = candidate_token_type;
         longest_match = candidate_match_length;

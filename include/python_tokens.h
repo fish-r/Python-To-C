@@ -5,7 +5,7 @@
 /* Python Tokens and Data */
 #define numPythonKeywords 30
 #define numPythonOperators 21
-#define numPythonDelimiters 25
+#define numPythonDelimiters 23
 #define numSpecialPythonTokens 4
 #define numUnusedPythonTokens 3
 
@@ -108,7 +108,11 @@ typedef enum  {
   PYTOK_FLOAT,
   PYTOK_STRING,
   PYTOK_BOOLEAN,
-  PYTOK_NONE
+  PYTOK_NONE,  
+  PYTOK_LIST_INT,
+  PYTOK_LIST_FLOAT,
+  PYTOK_LIST_STR
+
 }PythonTokenType;
 
 #endif /* PYTHON_TOKENS_H */
