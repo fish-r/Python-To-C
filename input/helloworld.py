@@ -1,2 +1,2 @@
 print("Hello World!")
-true = 1 >= 0
+true = 1.2 >= 0

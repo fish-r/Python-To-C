@@ -194,9 +194,9 @@ PythonTokenType is_python_numeric(const char *lexeme, size_t *matched_length)
 {
   size_t length = 0;
   int decimal_point_count = 0;
+  int has_digits = 0;
 
-  /* same logic as is_python_string*/
-  /* check if the first character is a digit or a minus sign */
+  /* Check if the first character is a digit or a minus sign */
   if (*lexeme == '-' || is_digit(*lexeme))
   {
     const char *ptr = lexeme;
@@ -213,6 +213,10 @@ PythonTokenType is_python_numeric(const char *lexeme, size_t *matched_length)
           return UNKNOWN;
         }
       }
+      else
+      {
+        has_digits = 1;
+      }
       ptr++;
       length++;
     }
@@ -220,13 +224,21 @@ PythonTokenType is_python_numeric(const char *lexeme, size_t *matched_length)
     if (length > 0)
     {
       *matched_length = length;
-      return PYTOK_NUMERIC;
+      if (decimal_point_count == 0)
+      {
+        return (has_digits ? PYTOK_INT : UNKNOWN);
+      }
+      else
+      {
+        return PYTOK_FLOAT;
+      }
     }
   }
 
   *matched_length = 0;
   return UNKNOWN;
 }
+
 
 PythonTokenType is_python_boolean(const char *lexeme)
 {

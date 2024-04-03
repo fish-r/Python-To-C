@@ -104,7 +104,8 @@ typedef enum  {
   PYTOK_IDENTIFIER,
 
   /* Literals */
-  PYTOK_NUMERIC,
+  PYTOK_INT,
+  PYTOK_FLOAT,
   PYTOK_STRING,
   PYTOK_BOOLEAN,
   PYTOK_NONE
