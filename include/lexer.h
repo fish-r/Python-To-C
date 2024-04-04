@@ -12,6 +12,6 @@ typedef struct
 char *strdup(const char *s);
 Token *create_token(PythonTokenType type, const char *lexeme, int line_number);
 void free_token(Token *token);
-int lex(char *source_code);
+Token **lex(char *source_code);
 
 #endif

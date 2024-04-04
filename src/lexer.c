@@ -334,7 +334,7 @@ PythonTokenType is_python_list(const char *lexeme, size_t *matched_length)
   return UNKNOWN;
 }
 
-int lex(char *source_code)
+Token **lex(char *source_code)
 {
   size_t i;
   PythonTokenType candidate_token_type = UNKNOWN;
@@ -383,12 +383,21 @@ int lex(char *source_code)
         longest_match = candidate_match_length;
         strcpy(matched_lexeme, candidate_lexeme);
       }
-      else if ((candidate_token_type = is_python_numeric(candidate_lexeme, &candidate_match_length)) !=
-                   UNKNOWN ||
-               (candidate_token_type = is_python_string(candidate_lexeme, &candidate_match_length)) !=
-                   UNKNOWN ||
-               (candidate_token_type = is_python_list(candidate_lexeme, &candidate_match_length)) !=
-                   UNKNOWN)
+      else if ((candidate_token_type = is_python_numeric(candidate_lexeme, &candidate_match_length)) != UNKNOWN)
+      {
+        token_type = candidate_token_type;
+        longest_match = candidate_match_length;
+        strncpy(matched_lexeme, candidate_lexeme, candidate_match_length);
+      }
+      else if ((candidate_token_type = is_python_string(candidate_lexeme, &candidate_match_length)) !=
+               UNKNOWN)      
+      {
+        token_type = candidate_token_type;
+        longest_match = candidate_match_length;
+        strncpy(matched_lexeme, candidate_lexeme, candidate_match_length);
+      }
+      else if ((candidate_token_type = is_python_list(candidate_lexeme, &candidate_match_length)) !=
+               UNKNOWN)      
       {
         token_type = candidate_token_type;
         longest_match = candidate_match_length;
@@ -425,7 +434,9 @@ int lex(char *source_code)
       ++current_position;
     }
   }
-
+  token_stream[token_count] = NULL;
+  return token_stream;
+  /* ignore below cos token_stream is needed 
   for (i = 0; i < token_count; i++)
   {
     free_token(token_stream[i]);
@@ -435,6 +446,7 @@ int lex(char *source_code)
   free(source_code);
 
   return 0;
+  */
 }
 
 Token *create_token(PythonTokenType type, const char *lexeme, int line_number)
