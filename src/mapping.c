@@ -56,63 +56,37 @@ Does not have direct equivalent in C; will need to derive functions
 */
 
 /* takes in list of Python Tokens and returns list of C Tokens*/
-const CToken *convert_to_c_token(PythonToken inputPythonToken) {
+CToken convert_to_c_token(PythonToken inputPythonToken) {
   // create C token from python token
   CToken ctok;
-  if (strcmp(keyword, "as") == 0) {
-    ctok.type = KEYWORD;
-    if (strcmp(ctok.lexeme, "as") == 0) {
-      ctok.func = as_c;
-    }
-    return &ctok;
-  } else if (strcmp(keyword, "class") == 0) {
-    ctok.type = KEYWORD;
-    if (strcmp(ctok.lexeme, "class") == 0) {
-      ctok.func = class_c;
-    }
-    return &ctok;
-  } else if (strcmp(keyword, "def") == 0) {
-    ctok.type = KEYWORD;
-    if (strcmp(ctok.lexeme, "def") == 0) {
-      ctok.func = def_c;
-    }
-    return &ctok;
-  } else if (strcmp(keyword, "elif") == 0) {
-    ctok.type = KEYWORD;
-    if (strcmp(ctok.lexeme, "elif") == 0) {
-      ctok.func = elif_c;
-    }
-    return &ctok;
-  } else if (strcmp(keyword, "exec") == 0) {
-    ctok.type = KEYWORD;
-    if (strcmp(ctok.lexeme, "exec") == 0) {
-      ctok.func = exec_c;
-    }
-    return &ctok;
-  } else if (strcmp(keyword, "from") == 0) {
-    ctok.type = KEYWORD;
-    if (strcmp(ctok.lexeme, "from") == 0) {
-      ctok.func = from_c;
-    }
-    return &ctok;
-  } else if (strcmp(keyword, "global") == 0) {
-    ctok.type = KEYWORD;
-    if (strcmp(ctok.lexeme, "global") == 0) {
-      ctok.func = global_c;
-    }
-    return &ctok;
-  } else if (strcmp(keyword, "import") == 0) {
-    ctok.type = KEYWORD;
-    if (strcmp(ctok.lexeme, "import") == 0) {
-      ctok.func = import_c;
-    }
-    return &ctok;
-  } else if (strcmp(keyword, "in") == 0) {
-    ctok.type = KEYWORD;
-    if (strcmp(ctok.lexeme, "in") == 0) {
-      ctok.func = in_c;
-    }
-    return &ctok;
+  /* Keywords */
+  if (inputPythonToken.type == PY_KEYWORD_AS) {
+    ctok.type = C_KEYWORD_AS;
+    ctok.func = as_c;
+  } else if (inputPythonToken.type == PY_KEYWORD_CLASS) {
+    ctok.type = C_KEYWORD_CLASS;
+    ctok.func = class_c;
+  } else if (inputPythonToken.type == PY_KEYWORD_DEF) {
+    ctok.type = C_KEYWORD_DEF;
+    ctok.func = def_c;
+  } else if (inputPythonToken.type == PY_KEYWORD_ELIF) {
+    ctok.type = C_KEYWORD_ELIF;
+    ctok.func = elif_c;
+  } else if (inputPythonToken.type == PY_KEYWORD_EXEC) {
+    ctok.type = C_KEYWORD_EXEC;
+    ctok.func = exec_c;
+  } else if (inputPythonToken.type == PY_KEYWORD_FROM) {
+    ctok.type = C_KEYWORD_FROM;
+    ctok.func = from_c;
+  } else if (inputPythonToken.type == PY_KEYWORD_GLOBAL) {
+    ctok.type = C_KEYWORD_GLOBAL;
+    ctok.func = global_c;
+  } else if (inputPythonToken.type == PY_KEYWORD_IMPORT) {
+    ctok.type = C_KEYWORD_IMPORT;
+    ctok.func = import_c;
+  } else if (inputPythonToken.type == PY_KEYWORD_IN) {
+    ctok.type = C_KEYWORD_IN;
+    ctok.func = in_c;
   }
-  return NULL;
+  return ctok;
 }

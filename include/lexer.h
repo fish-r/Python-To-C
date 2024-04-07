@@ -13,7 +13,8 @@ typedef struct {
   CTokenType type;
   char *lexeme;
   char *to_print;
-  // function pointer func
+  // function pointer that points to the custom defined function that replaces a 
+  // non-existent python to C token
   void (*func)(void);
 } CToken;
 
