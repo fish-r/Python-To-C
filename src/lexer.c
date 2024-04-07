@@ -72,21 +72,29 @@ PythonTokenType is_python_special(const char *lexeme) {
   return UNKNOWN;
 }
 
-int lex(char *source_code) {
+PythonToken **lex(char *source_code, int *token_count) {
   size_t i;
-  PythonTokenType candidate_token_type = UNKNOWN;
   size_t candidate_match_length;
-  PythonToken **token_stream = NULL;
-  size_t token_count = 0;
-
-  size_t source_code_length = strlen(source_code);
-  size_t current_position = 0;
-  int current_line_number = 1;
-
-  PythonTokenType token_type = UNKNOWN;
-  size_t longest_match = 0;
+  size_t source_code_length;
+  size_t current_position;
+  int current_line_number;
+  PythonToken **token_stream;
+  PythonTokenType candidate_token_type;
+  PythonTokenType token_type;
+  size_t longest_match;
   char matched_lexeme[256] = {0};
   char candidate_lexeme[256] = {0};
+
+  token_stream = NULL;
+  candidate_token_type = UNKNOWN;
+  *token_count = 0;
+  current_position = 0;
+  current_line_number = 1;
+  source_code_length = strlen(source_code);
+
+  token_type = UNKNOWN;
+
+  longest_match = 0;
 
   while (current_position < source_code_length) {
     token_type = UNKNOWN;
@@ -117,9 +125,9 @@ int lex(char *source_code) {
       PythonToken *token =
           create_token(token_type, matched_lexeme, current_line_number);
       token_stream = (PythonToken **)realloc(
-          token_stream, (token_count + 1) * sizeof(PythonToken *));
-      token_stream[token_count] = token;
-      token_count++;
+          token_stream, (*token_count + 1) * sizeof(PythonToken *));
+      token_stream[*token_count] = token;
+      (*token_count)++;
       printf("PythonToken { type: %d, lexeme: '%s', line: '%d'}\n", token->type,
              token->lexeme, token->line_number);
       current_position += longest_match;
@@ -138,14 +146,9 @@ int lex(char *source_code) {
     }
   }
 
-  for (i = 0; i < token_count; i++) {
-    free_token(token_stream[i]);
-  }
-  free(token_stream);
-
   free(source_code);
 
-  return 0;
+  return token_stream;
 }
 
 PythonToken *create_token(PythonTokenType type, const char *lexeme,

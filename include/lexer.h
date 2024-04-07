@@ -13,13 +13,13 @@ typedef struct {
   CTokenType type;
   char *lexeme;
   char *to_print;
-  // function pointer that points to the custom defined function that replaces a 
-  // non-existent python to C token
+  /*function pointer that points to the custom defined function that replaces a 
+   non-existent python to C token*/
   void (*func)(void);
 } CToken;
 
 PythonToken *create_token(PythonTokenType type, const char *lexeme, int line_number);
 void free_token(PythonToken *token);
-int lex(char *source_code);
+PythonToken ** lex(char *source_code, int *num_tokens);
 
 #endif
