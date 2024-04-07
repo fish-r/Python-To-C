@@ -20,4 +20,6 @@ void or_c(void);
 
 CToken *convert_to_c_token(PythonToken *inputPythonToken);
 
+void map_keywords(PythonToken *inputPythonToken, CToken *ctok);
+
 #endif 
