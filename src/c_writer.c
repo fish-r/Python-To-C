@@ -45,6 +45,11 @@ void process_node(TreeNode *current_node, State *current_state) {
   /* printf("Current State: %d, Current Label: %s\n", *current_state,
           current_node->label);*/
   /*printf("Current node address %p\n", (void *)current_node);*/
+  if (*current_state == WRITE_INCLUDES) {
+    if (strcmp(current_node->label, "Program") == 0) {
+      write_to_file("#include <stdio.h>\n#include <stdlib.h>\n");
+    }
+  }
 
   if (*current_state == WRITE_FN_DEF) {
 
@@ -57,6 +62,7 @@ void process_node(TreeNode *current_node, State *current_state) {
       write_to_file("( ");
 
     } else if (strcmp(current_node->label, "Parameter") == 0) {
+      write_to_file("int ");
       write_to_file(current_node->token->lexeme);
 
     } else if (strcmp(current_node->label, "ReturnStatement") == 0) {
@@ -93,8 +99,15 @@ void process_node(TreeNode *current_node, State *current_state) {
     } else if (strcmp(current_node->label, "StringLiteral") == 0) {
       write_to_file(current_node->token->lexeme);
       write_to_file(");\n");
+    } else if (strcmp(current_node->label, "FloatLiteral") == 0) {
+      write_to_file("\"%f\", ");
+      write_to_file(current_node->token->lexeme);
+      write_to_file(");\n");
+    } else if (strcmp(current_node->label, "IntLiteral") == 0) {
+      write_to_file("\"%d\",");
+      write_to_file(current_node->token->lexeme);
+      write_to_file(");\n");
     }
-
   } else if (*current_state == WRITE_ELSE_STMT) {
     if (strcmp(current_node->label, "ElseStatement") == 0) {
       write_to_file("else{\n");
@@ -107,7 +120,9 @@ void process_node(TreeNode *current_node, State *current_state) {
 
 void set_state(State *current_state, TreeNode *current_node) {
   /*printf("Current State: %d\n", *current_state);*/
-  if (strcmp(current_node->label, "FunctionDefinition") == 0) {
+  if (strcmp(current_node->label, "Program") == 0) {
+    *current_state = WRITE_INCLUDES;
+  } else if (strcmp(current_node->label, "FunctionDefinition") == 0) {
     *current_state = WRITE_FN_DEF;
   } else if (strcmp(current_node->label, "IfStatement") == 0) {
     *current_state = WRITE_IF_STMT;
@@ -137,6 +152,34 @@ void clear_file(char *filename) {
     printf("Error opening file!\n");
     exit(1);
   }
+  fclose(file);
+}
+
+/* helper function to write at start of file*/
+void write_at_start(char *content) {
+  long i, content_size, file_size;
+  char c;
+  FILE *file = fopen("output.c", "r+");
+  if (file == NULL) {
+    printf("Error opening file!\n");
+    exit(1);
+  }
+
+  content_size = strlen(content);
+
+  fseek(file, 0, SEEK_END);
+  file_size = ftell(file);
+
+  for (i = file_size - 1; i >= 0; i--) {
+    fseek(file, i, SEEK_SET);
+    c = fgetc(file);
+    fseek(file, i + content_size, SEEK_SET);
+    fputc(c, file);
+  }
+
+  fseek(file, 0, SEEK_SET);
+  fprintf(file, "%s", content);
+
   fclose(file);
 }
 
