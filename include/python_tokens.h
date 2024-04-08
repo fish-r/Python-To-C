@@ -116,7 +116,10 @@ typedef enum
   PYTOK_NONE,
   PYTOK_LIST_INT,
   PYTOK_LIST_FLOAT,
-  PYTOK_LIST_STR
+  PYTOK_LIST_STR,
+
+  /* EOF */
+  PYTOK_EOF
 
 } PythonTokenType;
 

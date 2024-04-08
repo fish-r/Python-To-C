@@ -293,7 +293,7 @@ PythonTokenType is_python_list(const char *lexeme, size_t *matched_length)
         length++;
         continue;
       }
-      
+
       if (*lexeme == ']' && !in_quotes)
       {
         length++;
@@ -345,6 +345,7 @@ Token **lex(char *source_code)
   size_t source_code_length = strlen(source_code);
   size_t current_position = 0;
   int current_line_number = 1;
+  int current_indentation = 0;
 
   PythonTokenType token_type = UNKNOWN;
   size_t longest_match = 0;
@@ -356,6 +357,36 @@ Token **lex(char *source_code)
     token_type = UNKNOWN;
     longest_match = 0;
     memset(matched_lexeme, 0, sizeof(matched_lexeme));
+
+    /* Check indentation at the beginning of the line*/
+    if (source_code[current_position] == '\n')
+    {
+      current_indentation = 0;
+      ++current_line_number;
+      ++current_position;
+      continue;
+    }
+
+    /*Check if the character is a space and current indentation is 0 (start of line) */
+    /* ASSUME first line has 0 indentation*/
+    if (source_code[current_position] == ' ' &&
+        current_indentation == 0 &&
+        source_code[current_position - 1] != '\n' &&
+        current_line_number != 1)
+    {
+      ++current_indentation;
+      while (source_code[current_position] == ' ')
+      {
+        ++current_indentation;
+        ++current_position;
+      }
+    }
+
+    /* Reset indentation if it's not a multiple of 4 */
+    if (current_indentation % 4 != 0)
+    {
+      current_indentation = 0;
+    }
 
     for (i = current_position; i < source_code_length; ++i)
     {
@@ -390,14 +421,14 @@ Token **lex(char *source_code)
         strncpy(matched_lexeme, candidate_lexeme, candidate_match_length);
       }
       else if ((candidate_token_type = is_python_string(candidate_lexeme, &candidate_match_length)) !=
-               UNKNOWN)      
+               UNKNOWN)
       {
         token_type = candidate_token_type;
         longest_match = candidate_match_length;
         strncpy(matched_lexeme, candidate_lexeme, candidate_match_length);
       }
       else if ((candidate_token_type = is_python_list(candidate_lexeme, &candidate_match_length)) !=
-               UNKNOWN)      
+               UNKNOWN)
       {
         token_type = candidate_token_type;
         longest_match = candidate_match_length;
@@ -408,21 +439,17 @@ Token **lex(char *source_code)
     if (token_type != UNKNOWN)
     {
       Token *token =
-          create_token(token_type, matched_lexeme, current_line_number);
+          create_token(token_type, matched_lexeme, current_line_number, current_indentation);
       token_stream =
           (Token **)realloc(token_stream, (token_count + 1) * sizeof(Token *));
       token_stream[token_count] = token;
       token_count++;
-      printf("Token { type: %d, lexeme: '%s', line: '%d'}\n", token->type,
-             token->lexeme, token->line_number);
+      printf("Token { type: %d, lexeme: '%s', line: '%d', num_indentation, '%d'}\n", token->type,
+             token->lexeme, token->line_number, token->num_indentation);
       current_position += longest_match;
     }
     else
     {
-      if (source_code[current_position] == '\n')
-      {
-        current_line_number++;
-      }
       if (source_code[current_position] != ' ' &&
           source_code[current_position] != '\n' &&
           source_code[current_position] != '\t' &&
@@ -434,9 +461,9 @@ Token **lex(char *source_code)
       ++current_position;
     }
   }
-  token_stream[token_count] = NULL;
+  token_stream[token_count] = create_token(PYTOK_EOF, "EOF", 0, 0);
   return token_stream;
-  /* ignore below cos token_stream is needed 
+  /* ignore below cos token_stream is needed
   for (i = 0; i < token_count; i++)
   {
     free_token(token_stream[i]);
@@ -449,12 +476,13 @@ Token **lex(char *source_code)
   */
 }
 
-Token *create_token(PythonTokenType type, const char *lexeme, int line_number)
+Token *create_token(PythonTokenType type, const char *lexeme, int line_number, int num_indentation)
 {
   Token *token = (Token *)malloc(sizeof(Token));
   token->type = type;
   token->lexeme = strdup(lexeme);
   token->line_number = line_number;
+  token->num_indentation = num_indentation;
   return token;
 }
 
