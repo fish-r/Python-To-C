@@ -26,6 +26,12 @@ void traverse_tree(TreeNode *root, State *prev_state) {
   }
 
   for (i = 0; i < current_node->num_children; i++) {
+    /* implement lookahead */
+    if (i > 0 &&
+        strcmp(current_node->children[i - 1]->label, "Parameter") == 0 &&
+        strcmp(current_node->children[i]->label, "Parameter") == 0) {
+      write_to_file(", ");
+    }
     traverse_tree(current_node->children[i], &current_state);
   }
   /* On recursion exit write closing brackets */
@@ -38,6 +44,8 @@ void traverse_tree(TreeNode *root, State *prev_state) {
 void process_node(TreeNode *current_node, State *current_state) {
   /* printf("Current State: %d, Current Label: %s\n", *current_state,
           current_node->label);*/
+  /*printf("Current node address %p\n", (void *)current_node);*/
+
   if (*current_state == WRITE_FN_DEF) {
 
     if (strcmp(current_node->label, "FunctionDefinition") == 0) {
@@ -50,10 +58,7 @@ void process_node(TreeNode *current_node, State *current_state) {
 
     } else if (strcmp(current_node->label, "Parameter") == 0) {
       write_to_file(current_node->token->lexeme);
-      /* implement lookahead */
-      if (strcmp(current_node++->label, "Parameter") == 0) {
-        write_to_file(", ");
-      }
+
     } else if (strcmp(current_node->label, "ReturnStatement") == 0) {
       write_to_file("return ");
 
