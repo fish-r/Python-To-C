@@ -344,7 +344,8 @@ Token **lex(char *source_code)
 
   size_t source_code_length = strlen(source_code);
   size_t current_position = 0;
-  int current_line_number = 1;
+  int current_line_number = 1;  
+  int current_indentation = 0;
 
   PythonTokenType token_type = UNKNOWN;
   size_t longest_match = 0;
@@ -356,6 +357,35 @@ Token **lex(char *source_code)
     token_type = UNKNOWN;
     longest_match = 0;
     memset(matched_lexeme, 0, sizeof(matched_lexeme));
+    
+    /* Check indentation at the beginning of the line*/
+    if (source_code[current_position] == '\n')
+    {
+        current_indentation = 0;
+        ++current_line_number;
+        ++current_position;
+        continue; 
+    }
+
+    /*Check if the character is a space and current indentation is 0 (start of line) */
+    /* ASSUME first line has 0 indentation*/
+    if (source_code[current_position] == ' ' && 
+        current_indentation == 0 && 
+        source_code[current_position - 1] != '\n' && 
+        current_line_number != 1) 
+    {
+        ++current_indentation;
+        while (source_code[current_position] == ' ') {
+            ++current_indentation;
+            ++current_position;
+        }
+        
+    }
+    
+    /* Reset indentation if it's not a multiple of 4 */
+    if (current_indentation % 4 != 0) {
+        current_indentation = 0;
+    }
 
     for (i = current_position; i < source_code_length; ++i)
     {
@@ -408,22 +438,18 @@ Token **lex(char *source_code)
     if (token_type != UNKNOWN)
     {
       Token *token =
-          create_token(token_type, matched_lexeme, current_line_number);
+          create_token(token_type, matched_lexeme, current_line_number,current_indentation);
       token_stream =
           (Token **)realloc(token_stream, (token_count + 1) * sizeof(Token *));
       token_stream[token_count] = token;
       token_count++;
-      printf("Token { type: %d, lexeme: '%s', line: '%d'}\n", token->type,
-             token->lexeme, token->line_number);
+      printf("Token { type: %d, lexeme: '%s', line: '%d', num_indentation, '%d'}\n", token->type,
+             token->lexeme, token->line_number, token->num_indentation);
       current_position += longest_match;
     }
     else
     {
-      if (source_code[current_position] == '\n')
-      {
-        current_line_number++;
-      }
-      if (source_code[current_position] != ' ' &&
+      if (source_code[current_position] != ' '  &&
           source_code[current_position] != '\n' &&
           source_code[current_position] != '\t' &&
           source_code[current_position] != '\r')
@@ -449,12 +475,13 @@ Token **lex(char *source_code)
   */
 }
 
-Token *create_token(PythonTokenType type, const char *lexeme, int line_number)
+Token *create_token(PythonTokenType type, const char *lexeme, int line_number, int num_indentation)
 {
   Token *token = (Token *)malloc(sizeof(Token));
   token->type = type;
   token->lexeme = strdup(lexeme);
   token->line_number = line_number;
+  token->num_indentation = num_indentation;
   return token;
 }
 
