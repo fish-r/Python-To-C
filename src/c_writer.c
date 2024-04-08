@@ -1,19 +1,20 @@
 #include "../include/c_writer.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 /* Define the maximum number of nodes in the tree */
 #define MAX_NODES 100
 
 /* Define the states of the FSM */
-typedef enum { STATE_IDLE, STATE_TRAVERSING, STATE_DONE } State;
 
 /* Function to traverse the tree using FSM */
 void traverse_tree(TreeNode *root) {
   /* Create a stack to store the nodes */
-  TreeNode *stack[MAX_NODES];
+  TreeNode *queue[MAX_NODES];
   TreeNode *current_node;
-  int top = -1;
+  int front = -1;
+  int rear = -1;
   int i = 0;
 
   /* Initialize the FSM */
@@ -23,29 +24,54 @@ void traverse_tree(TreeNode *root) {
   while (current_state != STATE_DONE) {
     switch (current_state) {
     case STATE_IDLE:
-      /* Push the root node onto the stack */
-      stack[++top] = root;
+      /* Enqueue the root node */
+      queue[++rear] = root;
       current_state = STATE_TRAVERSING;
       break;
 
     case STATE_TRAVERSING:
-      /* Check if the stack is empty */
-      if (top == -1) {
+      /* Check if the queue is empty */
+      if (front == rear) {
         current_state = STATE_DONE;
         break;
       }
-
-      /* Pop the top node from the stack */
-      current_node = stack[top--];
-
+      /* Dequeue the front node */
+      current_node = queue[++front];
       /* Process the current node */
-      printf("Current Node: %s \n", current_node->lexeme);
-
-      /* Push the children of the current node onto the stack */
+      /*printf("Current Node: %s \n", current_node->label);*/
+      /* Enqueue the children of the current node */
       for (i = 0; i < current_node->num_children; i++) {
-        stack[++top] = current_node->children[i];
+        queue[++rear] = current_node->children[i];
       }
+      set_state(&current_state, current_node);
+      break;
 
+    case WRITE_FN_DEF:
+      printf("Label: %s\n", current_node->label);
+      if (strcmp(current_node->label, "FunctionDefinition") == 0) {
+        /*TODO: change to return type later*/
+        write_to_file("output.c", "void ");
+      } else if (strcmp(current_node->label, "Identifier") == 0) {
+        write_to_file("output.c", current_node->lexeme);
+        write_to_file("output.c", "( ");
+      } else if (strcmp(current_node->label, "Parameter") == 0) {
+        write_to_file("output.c", current_node->lexeme);
+        write_to_file("output.c", ", ");
+      } else if (strcmp(current_node->label, "ReturnStatement") == 0) {
+        write_to_file("output.c", "return ");
+      } else if (strcmp(current_node->label, "Block") == 0) {
+        current_state = STATE_TRAVERSING;
+        write_to_file("output.c", ") {\n");
+      }
+      current_node = queue[++front];
+
+      break;
+
+    case WRITE_IF_STMT:
+      printf("Writing If Statement\n");
+      if (strcmp(current_node->label, "Block") == 0) {
+        current_state = STATE_TRAVERSING;
+      }
       break;
 
     case STATE_DONE:
@@ -53,6 +79,14 @@ void traverse_tree(TreeNode *root) {
       printf("Done\n");
       break;
     }
+  }
+}
+
+void set_state(State *current_state, TreeNode *current_node) {
+  if (strcmp(current_node->label, "FunctionDefinition") == 0) {
+    *current_state = WRITE_FN_DEF;
+  } else if (strcmp(current_node->label, "IfStatement") == 0) {
+    *current_state = WRITE_IF_STMT;
   }
 }
 
