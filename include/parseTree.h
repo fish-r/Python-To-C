@@ -9,10 +9,10 @@ typedef struct TreeNode
     struct TreeNode *parent;
     struct TreeNode **children;
     size_t num_children;
-    Token *lexeme;
+    Token *token;
 } TreeNode;
 
-TreeNode *createNode(char *label, Token *lexeme);
+TreeNode *createNode(char *label, Token *token);
 void addChild(TreeNode *parent, TreeNode *child);
 void printParseTree(TreeNode *root, int depth);
 TreeNode *buildParseTree(Token *tokens, size_t num_tokens);
