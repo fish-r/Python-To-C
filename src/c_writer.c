@@ -56,12 +56,16 @@ void traverse_tree(TreeNode *root) {
         write_to_file("output.c", "( ");
       } else if (strcmp(current_node->label, "Parameter") == 0) {
         write_to_file("output.c", current_node->lexeme);
-        write_to_file("output.c", ", ");
+        /* implement lookahead */
+        if (strcmp(queue[front + 1]->label, "Parameter") == 0) {
+          write_to_file("output.c", ", ");
+        }
       } else if (strcmp(current_node->label, "ReturnStatement") == 0) {
         write_to_file("output.c", "return ");
       } else if (strcmp(current_node->label, "Block") == 0) {
         current_state = STATE_TRAVERSING;
         write_to_file("output.c", ") {\n");
+        break;
       }
       current_node = queue[++front];
 
