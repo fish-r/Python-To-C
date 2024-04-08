@@ -28,6 +28,10 @@ void traverse_tree(TreeNode *root, State *prev_state) {
   for (i = 0; i < current_node->num_children; i++) {
     traverse_tree(current_node->children[i], &current_state);
   }
+  /* On recursion exit write closing brackets */
+  if (strcmp(current_node->label, "Block") == 0) {
+    write_to_file("}\n");
+  }
   /*printf("Exiting node %s \n", current_node->label);*/
 }
 
@@ -61,10 +65,13 @@ void process_node(TreeNode *current_node, State *current_state) {
   else if (*current_state == WRITE_IF_STMT) {
     if (strcmp(current_node->label, "IfStatement") == 0) {
       write_to_file("if (");
+    } else if (strcmp(current_node->label, "Block") == 0) {
+      write_to_file(") {\n");
     }
   }
 
   else if (*current_state == WRITE_CONDITION) {
+    printf("Write cond, %d\n", *current_state);
     if (strcmp(current_node->label, "first term") == 0) {
       write_to_file(current_node->lexeme->lexeme);
     } else if (strcmp(current_node->label, "operator") == 0) {
@@ -80,8 +87,16 @@ void process_node(TreeNode *current_node, State *current_state) {
 
   else if (*current_state == WRITE_PRINT_STMT) {
     if (strcmp(current_node->label, "PrintStatement") == 0) {
-      write_to_file("printf(\"%d\\n\", ");
-    } else if (strcmp(current_node->label, "Expression") == 0) {
+      write_to_file("printf(");
+    } else if (strcmp(current_node->label, "StringLiteral") == 0) {
+      write_to_file(current_node->lexeme->lexeme);
+      write_to_file(");\n");
+    }
+
+  } else if (*current_state == WRITE_ELSE_STMT) {
+    if (strcmp(current_node->label, "ElseStatement") == 0) {
+      write_to_file("else{\n");
+    } else if (strcmp(current_node->label, "StringLiteral") == 0) {
       write_to_file(current_node->lexeme->lexeme);
       write_to_file(");\n");
     }
@@ -98,8 +113,8 @@ void set_state(State *current_state, TreeNode *current_node) {
     *current_state = WRITE_CONDITION;
   } else if (strcmp(current_node->label, "PrintStatement") == 0) {
     *current_state = WRITE_PRINT_STMT;
-  } else if (strcmp(current_node->label, "StringLiteral") == 0) {
-    *current_state = WRITE_STRING_LITERAL;
+  } else if (strcmp(current_node->label, "ElseStatement") == 0) {
+    *current_state = WRITE_ELSE_STMT;
   } else {
     return;
   }
