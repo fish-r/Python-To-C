@@ -1,5 +1,3 @@
-def func1(x,y,z):
-    if x<y:
-        print("s")
-        print("t")
-        ::
+def func1(x):
+    print("1")
+    ::
