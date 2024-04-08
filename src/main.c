@@ -7,7 +7,7 @@
 
 int main(int argc, char *argv[]) {
   Token **tokens;
-  size_t i;
+  /*size_t i;*/
   size_t num_tokens = 0;
   TreeNode *parse_tree;
 
@@ -38,10 +38,14 @@ int main(int argc, char *argv[]) {
   printParseTree(parse_tree, 0);
   write_c_file(parse_tree);
 
+  /*
   free(source_code);
   for (i = 0; i < num_tokens; i++) {
     free_token(tokens[i]);
   }
   free(tokens);
+  */
+
+  printf("Done parsing...\n");
   return 0;
 }

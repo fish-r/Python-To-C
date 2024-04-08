@@ -21,13 +21,14 @@ void traverse_tree(TreeNode *root, State *prev_state) {
   process_node(current_node, &current_state);
 
   if (root->num_children == 0) {
-    /* printf("Done \n"); */
+    /*printf("Done with node %s \n", current_node->label);*/
     return;
   }
 
   for (i = 0; i < current_node->num_children; i++) {
     traverse_tree(current_node->children[i], &current_state);
   }
+  /*printf("Exiting node %s \n", current_node->label);*/
 }
 
 void process_node(TreeNode *current_node, State *current_state) {
@@ -37,53 +38,52 @@ void process_node(TreeNode *current_node, State *current_state) {
 
     if (strcmp(current_node->label, "FunctionDefinition") == 0) {
       /*TODO: change to return type later*/
-      write_to_file("output.c", "void ");
+      write_to_file("void ");
 
     } else if (strcmp(current_node->label, "Identifier") == 0) {
-      write_to_file("output.c", current_node->lexeme);
-      write_to_file("output.c", "( ");
+      write_to_file(current_node->lexeme->lexeme);
+      write_to_file("( ");
 
     } else if (strcmp(current_node->label, "Parameter") == 0) {
-      write_to_file("output.c", current_node->lexeme);
+      write_to_file(current_node->lexeme->lexeme);
       /* implement lookahead */
       if (strcmp(current_node++->label, "Parameter") == 0) {
-        write_to_file("output.c", ", ");
+        write_to_file(", ");
       }
     } else if (strcmp(current_node->label, "ReturnStatement") == 0) {
-      write_to_file("output.c", "return ");
+      write_to_file("return ");
 
     } else if (strcmp(current_node->label, "Block") == 0) {
-      write_to_file("output.c", ") {\n");
-      printf("Current state: %d\n", *current_state);
+      write_to_file(") {\n");
     }
   }
 
   else if (*current_state == WRITE_IF_STMT) {
     if (strcmp(current_node->label, "IfStatement") == 0) {
-      write_to_file("output.c", "if (");
+      write_to_file("if (");
     }
   }
 
   else if (*current_state == WRITE_CONDITION) {
     if (strcmp(current_node->label, "first term") == 0) {
-      write_to_file("output.c", current_node->lexeme);
+      write_to_file(current_node->lexeme->lexeme);
     } else if (strcmp(current_node->label, "operator") == 0) {
-      write_to_file("output.c", " ");
-      write_to_file("output.c", current_node->lexeme);
-      write_to_file("output.c", " ");
+      write_to_file(" ");
+      write_to_file(current_node->lexeme->lexeme);
+      write_to_file(" ");
     } else if (strcmp(current_node->label, "second term") == 0) {
-      write_to_file("output.c", current_node->lexeme);
+      write_to_file(current_node->lexeme->lexeme);
     } else if (strcmp(current_node->label, "Block") == 0) {
-      write_to_file("output.c", ") {\n");
+      write_to_file(") {\n");
     }
   }
 
   else if (*current_state == WRITE_PRINT_STMT) {
     if (strcmp(current_node->label, "PrintStatement") == 0) {
-      write_to_file("output.c", "printf(\"%d\\n\", ");
+      write_to_file("printf(\"%d\\n\", ");
     } else if (strcmp(current_node->label, "Expression") == 0) {
-      write_to_file("output.c", current_node->lexeme);
-      write_to_file("output.c", ");\n");
+      write_to_file(current_node->lexeme->lexeme);
+      write_to_file(");\n");
     }
   }
 }
@@ -98,6 +98,8 @@ void set_state(State *current_state, TreeNode *current_node) {
     *current_state = WRITE_CONDITION;
   } else if (strcmp(current_node->label, "PrintStatement") == 0) {
     *current_state = WRITE_PRINT_STMT;
+  } else if (strcmp(current_node->label, "StringLiteral") == 0) {
+    *current_state = WRITE_STRING_LITERAL;
   } else {
     return;
   }
@@ -122,8 +124,8 @@ void clear_file(char *filename) {
 }
 
 /* helper function to write to "output.c" */
-void write_to_file(char *filename, char *content) {
-  FILE *file = fopen(filename, "a");
+void write_to_file(char *content) {
+  FILE *file = fopen("output.c", "a");
   if (file == NULL) {
     printf("Error opening file!\n");
     exit(1);
