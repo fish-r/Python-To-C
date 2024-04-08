@@ -9,43 +9,28 @@
 /* Define the states of the FSM */
 
 /* Function to traverse the tree using FSM */
-void traverse_tree(TreeNode *root) {
+void traverse_tree(TreeNode *root, State *prev_state) {
   /* Create a stack to store the nodes */
-  TreeNode *queue[MAX_NODES];
-  TreeNode *current_node;
-  State current_state = STATE_INIT;
-  int front = -1;
-  int rear = -1;
+  TreeNode *current_node = root;
+  State current_state = *prev_state;
   int i = 0;
 
-  /* Start traversing the tree */
-  /* Check if the queue is empty AND current node has no children */
-  /* printf("Front, rear, num children %d %d %d\n", front, rear,
-         (int)(queue[front]->num_children)); */
+  /* Process the current node */
+  set_state(&current_state, current_node);
+  printf("Current Node: %s \n", current_node->label);
+  process_node(current_node, &current_state);
 
-  /* Enqueue the root node */
-  queue[++rear] = root;
-
-  if (front == rear && queue[front]->num_children == 0) {
+  if (root->num_children == 0) {
     /* printf("Done \n"); */
     return;
   }
 
-  /* Dequeue the front node */
-  current_node = queue[++front];
-  /* Process the current node */
-  set_state(&current_state, current_node);
-  printf("Current Node: %s \n", current_node->label);
-  process_node(current_node, &current_state, queue, front);
-  /* Enqueue the children of the current node */
   for (i = 0; i < current_node->num_children; i++) {
-    queue[++rear] = current_node->children[i];
-    traverse_tree(current_node->children[i]);
+    traverse_tree(current_node->children[i], &current_state);
   }
 }
 
-void process_node(TreeNode *current_node, State *current_state,
-                  TreeNode **queue, int front) {
+void process_node(TreeNode *current_node, State *current_state) {
   printf("Current State: %d, Current Label: %s\n", *current_state,
          current_node->label);
   if (*current_state == WRITE_FN_DEF) {
@@ -61,7 +46,7 @@ void process_node(TreeNode *current_node, State *current_state,
     } else if (strcmp(current_node->label, "Parameter") == 0) {
       write_to_file("output.c", current_node->lexeme);
       /* implement lookahead */
-      if (strcmp(queue[front + 1]->label, "Parameter") == 0) {
+      if (strcmp(current_node++->label, "Parameter") == 0) {
         write_to_file("output.c", ", ");
       }
     } else if (strcmp(current_node->label, "ReturnStatement") == 0) {
@@ -86,11 +71,9 @@ void set_state(State *current_state, TreeNode *current_node) {
 }
 
 void write_c_file(TreeNode *root) {
-  /* Create a sample tree */
-  /* TreeNode *root = createNode("root", "lexeme1"); */
-
+  State initial_state = STATE_INIT;
   /* Traverse the tree using FSM */
-  traverse_tree(root);
+  traverse_tree(root, &initial_state);
 }
 
 /* helper function to write to "output.c" */

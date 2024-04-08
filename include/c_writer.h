@@ -8,10 +8,9 @@ typedef enum {
   WRITE_IF_STMT
 } State;
 
-void traverse_tree(TreeNode *root);
+void traverse_tree(TreeNode *root, State *prev_state);
 void set_state(State * current_state, TreeNode *current_node);
 void write_c_file(TreeNode *root);
 void write_to_file(char *filename, char *content);
-void process_node(TreeNode *current_node, State *current_state,
-                  TreeNode **queue, int front);
+void process_node(TreeNode *current_node, State *current_state);
 #endif
