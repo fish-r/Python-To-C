@@ -4,14 +4,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-TreeNode *createNode(char *label, Token *lexeme)
+TreeNode *createNode(char *label, Token *token)
 {
     TreeNode *node = (TreeNode *)malloc(sizeof(TreeNode));
     node->label = strdup(label);
     node->parent = NULL;
     node->children = NULL;
     node->num_children = 0;
-    node->lexeme = lexeme;
+    node->token = token;
     return node;
 }
 
@@ -30,9 +30,9 @@ void printParseTree(TreeNode *root, int depth)
     {
         printf("  ");
     }
-    if (root->lexeme != NULL)
+    if (root->token != NULL)
     {
-        printf("%s -> %s\n", root->label, root->lexeme->lexeme);
+        printf("%s -> %s\n", root->label, root->token->lexeme);
     }
     else
     {
@@ -101,7 +101,6 @@ TreeNode *buildParseTreeFromTokens(Token **tokens, size_t num_tokens)
             break;
         case PYTOK_EOF:
             index++;
-            printf("EOF\n");
             break;
         default:
             index++;
@@ -251,15 +250,15 @@ size_t parseCondition(Token **tokens, TreeNode *currentNode, size_t index)
     currentNode = currentNode->children[currentNode->num_children - 1];
 
     /* add first term as child */
-    addChild(currentNode, createNode("first term", tokens[index]));
+    addChild(currentNode, createNode("Term", tokens[index]));
     index++;
 
     /* add op as child */
-    addChild(currentNode, createNode("operator", tokens[index]));
+    addChild(currentNode, createNode("Operator", tokens[index]));
     index++;
 
     /* add second term as child */
-    addChild(currentNode, createNode("second term", tokens[index]));
+    addChild(currentNode, createNode("Term", tokens[index]));
     index++;
 
     return index;
@@ -321,7 +320,6 @@ size_t parseBlock(Token **tokens, TreeNode *currentNode, size_t index)
     /* add block as child */
     addChild(currentNode, createNode("Block", NULL));
     currentNode = currentNode->children[currentNode->num_children - 1];
-    printf("indent: %d\n", indent);
     while (tokens[index]->num_indentation == indent)
     /*while ((tokens[index]->type) != PYTOK_COLON)*/
     {
