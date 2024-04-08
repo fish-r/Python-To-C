@@ -19,5 +19,14 @@ TreeNode *buildParseTree(Token *tokens, size_t num_tokens);
 TreeNode *buildParseTreeFromTokens(Token **tokens, size_t num_tokens);
 
 PythonTokenType peekToken(Token *token);
+size_t parseForStatement(Token **tokens, TreeNode *currentNode, size_t index);
+size_t parseFuncDef(Token **tokens, TreeNode *currentNode, size_t index);
+size_t parsePrint(Token **tokens, TreeNode *currentNode, size_t index);
+size_t parseParamList(Token **tokens, TreeNode *currentNode, size_t index);
+size_t parseBlock(Token **tokens, TreeNode *currentNode, size_t index);
+size_t parseIfStatement(Token **tokens, TreeNode *currentNode, size_t index);
+size_t parseCondition(Token **tokens, TreeNode *currentNode, size_t index);
+size_t parseElseStatement(Token **tokens, TreeNode *currentNode, size_t index);
+size_t parseReturnStatement(Token **tokens, TreeNode *currentNode, size_t index);
 
 #endif

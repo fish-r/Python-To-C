@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 int main(int argc, char *argv[])
-{ 
+{
   Token **tokens;
   size_t i;
   size_t num_tokens = 0;
@@ -24,14 +24,16 @@ int main(int argc, char *argv[])
   printf("Source code:\n %s\n", source_code);
   tokens = lex(source_code);
 
-  if (tokens == NULL) {
-      fprintf(stderr, "Error: Failed to tokenize the source code.\n");
-      free(source_code);
-      exit(EXIT_FAILURE);
+  if (tokens == NULL)
+  {
+    fprintf(stderr, "Error: Failed to tokenize the source code.\n");
+    free(source_code);
+    exit(EXIT_FAILURE);
   }
 
-  while (tokens[num_tokens] != NULL) {
-      num_tokens++;
+  while (tokens[num_tokens] != NULL)
+  {
+    num_tokens++;
   }
   parse_tree = buildParseTreeFromTokens(tokens, num_tokens);
 
@@ -39,10 +41,10 @@ int main(int argc, char *argv[])
   printParseTree(parse_tree, 0);
 
   free(source_code);
-  for (i = 0; i < num_tokens; i++) {
-      free_token(tokens[i]);
+  for (i = 0; i < num_tokens; i++)
+  {
+    free_token(tokens[i]);
   }
   free(tokens);
-
   return 0;
 }
