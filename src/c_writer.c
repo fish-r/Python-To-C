@@ -45,11 +45,11 @@ void process_node(TreeNode *current_node, State *current_state) {
       write_to_file("void ");
 
     } else if (strcmp(current_node->label, "Identifier") == 0) {
-      write_to_file(current_node->lexeme->lexeme);
+      write_to_file(current_node->token->lexeme);
       write_to_file("( ");
 
     } else if (strcmp(current_node->label, "Parameter") == 0) {
-      write_to_file(current_node->lexeme->lexeme);
+      write_to_file(current_node->token->lexeme);
       /* implement lookahead */
       if (strcmp(current_node++->label, "Parameter") == 0) {
         write_to_file(", ");
@@ -71,15 +71,12 @@ void process_node(TreeNode *current_node, State *current_state) {
   }
 
   else if (*current_state == WRITE_CONDITION) {
-    printf("Write cond, %d\n", *current_state);
-    if (strcmp(current_node->label, "first term") == 0) {
-      write_to_file(current_node->lexeme->lexeme);
-    } else if (strcmp(current_node->label, "operator") == 0) {
+    if (strcmp(current_node->label, "Term") == 0) {
+      write_to_file(current_node->token->lexeme);
+    } else if (strcmp(current_node->label, "Operator") == 0) {
       write_to_file(" ");
-      write_to_file(current_node->lexeme->lexeme);
+      write_to_file(current_node->token->lexeme);
       write_to_file(" ");
-    } else if (strcmp(current_node->label, "second term") == 0) {
-      write_to_file(current_node->lexeme->lexeme);
     } else if (strcmp(current_node->label, "Block") == 0) {
       write_to_file(") {\n");
     }
@@ -89,7 +86,7 @@ void process_node(TreeNode *current_node, State *current_state) {
     if (strcmp(current_node->label, "PrintStatement") == 0) {
       write_to_file("printf(");
     } else if (strcmp(current_node->label, "StringLiteral") == 0) {
-      write_to_file(current_node->lexeme->lexeme);
+      write_to_file(current_node->token->lexeme);
       write_to_file(");\n");
     }
 
@@ -97,7 +94,7 @@ void process_node(TreeNode *current_node, State *current_state) {
     if (strcmp(current_node->label, "ElseStatement") == 0) {
       write_to_file("else{\n");
     } else if (strcmp(current_node->label, "StringLiteral") == 0) {
-      write_to_file(current_node->lexeme->lexeme);
+      write_to_file(current_node->token->lexeme);
       write_to_file(");\n");
     }
   }
