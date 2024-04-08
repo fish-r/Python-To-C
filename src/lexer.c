@@ -1,4 +1,5 @@
 #include "../include/lexer.h"
+#include "../include/utils.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,6 +22,15 @@ const char *pythonDelimitersList[] = {
 
 const char *specialPythonTokensList[] = {"'", "\"", "#", "\\"};
 const char *unusedPythonTokensList[] = {"$", "?", "`"};
+
+/* Unimplemented Keywords List*/
+const char *unImplementedKeywordsTokenList[] = { 
+    "and", "as", "assert", "class", "del", "except", 
+    "exec", "finally", "from", "global","import", 
+    "in", "is", "lambda", "not", "or", "pass", "raise",  
+    "try",  "with", "yield"};
+const char *unImplementedOperatorsTokenList[] = { "**","//","@",":=" };
+const char *unImplementedDelimitersTokenList[] = { "{","}","//","@=","**=" };
 
 typedef enum
 {
@@ -48,7 +58,6 @@ PythonTokenType is_python_keyword(const char *lexeme)
       return i;
     }
   }
-
   return UNKNOWN;
 }
 
@@ -436,6 +445,11 @@ Token **lex(char *source_code)
       }
     }
 
+    /* Check for error */
+    checkAndThrowError(matched_lexeme, unImplementedKeywordsTokenList, numUnImplementedKeywordsTokenList, "Keyword", current_line_number);
+    checkAndThrowError(matched_lexeme, unImplementedOperatorsTokenList, numUnImplementedOperatorsTokenList, "Operator", current_line_number);
+    checkAndThrowError(matched_lexeme, unImplementedDelimitersTokenList, numUnImplementedDelimitersTokenList, "Delimiter", current_line_number);
+
     if (token_type != UNKNOWN)
     {
       Token *token =
@@ -455,10 +469,12 @@ Token **lex(char *source_code)
           source_code[current_position] != '\t' &&
           source_code[current_position] != '\r')
       {
-        printf("Error: Unrecognized character '%c' at line %d\n",
-               source_code[current_position], current_line_number);
+      throwError("Unimplemented Unknown Token '%s' at line %d\n",
+                  matched_lexeme, current_line_number);
       }
       ++current_position;
+
+     
     }
   }
   token_stream[token_count] = create_token(PYTOK_EOF, "EOF", 0, 0);
