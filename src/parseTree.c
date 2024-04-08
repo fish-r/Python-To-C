@@ -99,8 +99,11 @@ TreeNode *buildParseTreeFromTokens(Token **tokens, size_t num_tokens)
             }
             currentNode = currentNode->children[currentNode->num_children - 1];
             break;
+        case PYTOK_EOF:
+            index++;
+            printf("EOF\n");
+            break;
         default:
-            printf("enter default\n");
             index++;
             currentToken = tokens[index];
             break;
@@ -307,18 +310,20 @@ size_t parseReturnStatement(Token **tokens, TreeNode *currentNode, size_t index)
 size_t parseBlock(Token **tokens, TreeNode *currentNode, size_t index)
 {
     /* Block -> : <statements> */
-    /* set current indent level */
-    /*int indent = tokens[index]->indent;*/
+    int indent;
 
     /* skip colon keyword */
     index++;
 
+    /* set current indent level */
+    indent = tokens[index]->num_indentation;
+
     /* add block as child */
     addChild(currentNode, createNode("Block", NULL));
     currentNode = currentNode->children[currentNode->num_children - 1];
-
-    /*while (tokens[index]->indent == indent){}*/
-    while ((tokens[index]->type) != PYTOK_COLON)
+    printf("indent: %d\n", indent);
+    while (tokens[index]->num_indentation == indent)
+    /*while ((tokens[index]->type) != PYTOK_COLON)*/
     {
         /* peek next token */
         switch (peekToken(tokens[index]))
@@ -347,7 +352,6 @@ size_t parseBlock(Token **tokens, TreeNode *currentNode, size_t index)
             break;
         }
     }
-    index++;
     return index;
 }
 
