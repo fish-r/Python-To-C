@@ -43,6 +43,5 @@ int main(int argc, char *argv[]) {
     free_token(tokens[i]);
   }
   free(tokens);
-
   return 0;
 }
