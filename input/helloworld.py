@@ -4,3 +4,4 @@ def print_function(x, y):
 
     else:
         print(1)
+        return 0

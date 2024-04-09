@@ -65,9 +65,6 @@ void process_node(TreeNode *current_node, State *current_state) {
       write_to_file("int ");
       write_to_file(current_node->token->lexeme);
 
-    } else if (strcmp(current_node->label, "ReturnStatement") == 0) {
-      write_to_file("return ");
-
     } else if (strcmp(current_node->label, "Block") == 0) {
       write_to_file(") {\n");
     }
@@ -115,6 +112,13 @@ void process_node(TreeNode *current_node, State *current_state) {
       write_to_file(current_node->token->lexeme);
       write_to_file(");\n");
     }
+  } else if (*current_state == WRITE_RETURN) {
+    if (strcmp(current_node->label, "ReturnStatement") == 0) {
+      write_to_file("return ");
+    } else if (strcmp(current_node->label, "IntLiteral") == 0) {
+      write_to_file(current_node->token->lexeme);
+      write_to_file(";\n");
+    }
   }
 }
 
@@ -132,6 +136,8 @@ void set_state(State *current_state, TreeNode *current_node) {
     *current_state = WRITE_PRINT_STMT;
   } else if (strcmp(current_node->label, "ElseStatement") == 0) {
     *current_state = WRITE_ELSE_STMT;
+  } else if (strcmp(current_node->label, "ReturnStatement") == 0) {
+    *current_state = WRITE_RETURN;
   } else {
     return;
   }
