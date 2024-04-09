@@ -331,8 +331,28 @@ size_t parseReturnStatement(Token **tokens, TreeNode *currentNode, size_t index)
     currentNode = currentNode->children[currentNode->num_children - 1];
     index++;
 
-    addChild(currentNode, createNode("Identifier", tokens[index]));
-    index++;
+    /* check next token */
+    switch (peekToken(tokens[index]))
+    {
+    case PYTOK_IDENTIFIER:
+        addChild(currentNode, createNode("Identifier", tokens[index]));
+        index++;
+        break;
+    case PYTOK_INT:
+        addChild(currentNode, createNode("IntLiteral", tokens[index]));
+        index++;
+        break;
+    case PYTOK_FLOAT:
+        addChild(currentNode, createNode("FloatLiteral", tokens[index]));
+        index++;
+        break;
+    case PYTOK_STRING:
+        addChild(currentNode, createNode("StringLiteral", tokens[index]));
+        index++;
+        break;
+    default:
+        break;
+    }
 
     return index;
 }
