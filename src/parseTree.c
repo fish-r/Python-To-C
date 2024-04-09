@@ -135,7 +135,6 @@ TreeNode *buildParseTreeFromTokens(Token **tokens, size_t num_tokens)
             break;
         default:
             index++;
-            currentToken = tokens[index];
             break;
         }
     }
@@ -229,6 +228,10 @@ size_t parsePrint(Token **tokens, TreeNode *currentNode, size_t index)
     /* add print value as child */
     switch (tokens[index]->type)
     {
+    case PYTOK_CHAR:
+        addChild(currentNode, createNode("CharLiteral", tokens[index]));
+        index++;
+        break;
     case PYTOK_STRING:
         addChild(currentNode, createNode("StringLiteral", tokens[index]));
         index++;
@@ -245,6 +248,7 @@ size_t parsePrint(Token **tokens, TreeNode *currentNode, size_t index)
         addChild(currentNode, createNode("Identifier", tokens[index]));
         index++;
         break;
+    
 
     default:
         break;

@@ -197,6 +197,9 @@ PythonTokenType is_python_string(const char *lexeme, size_t *matched_length)
     {
       length++;
       *matched_length = length;
+      if (*matched_length==3){
+        return PYTOK_CHAR;
+      }
       return PYTOK_STRING;
     }
   }
@@ -452,27 +455,37 @@ Token **lex(char *source_code)
     checkAndThrowError(matched_lexeme, unImplementedOperatorsTokenList, numUnImplementedOperatorsTokenList, "Operator", current_line_number);
     checkAndThrowError(matched_lexeme, unImplementedDelimitersTokenList, numUnImplementedDelimitersTokenList, "Delimiter", current_line_number);
     /* Assign c_type */
-    if (token_type == PYTOK_INT){
-      c_type="int";
+    switch (token_type){
+      case (PYTOK_INT):
+        c_type="int";
+        break;
+      case (PYTOK_FLOAT):
+        c_type="float";
+        break;
+      case (PYTOK_CHAR):
+        c_type="char";
+        break;
+      case (PYTOK_STRING):
+        c_type="str";
+        break;
+      case (PYTOK_LIST_INT):
+        c_type="arr_int";
+        break;
+      case (PYTOK_LIST_FLOAT):
+        c_type="arr_float";
+        break;
+      case (PYTOK_LIST_STR):
+        c_type="arr_str";
+        break;
+      case (PYTOK_BOOLEAN):
+        c_type="bool";
+        break;
+      default:
+        c_type=NULL;
+        break;
     }
-    else if (token_type == PYTOK_FLOAT){
-      c_type="float";
-    }
-    else if (token_type == PYTOK_STRING){
-      c_type="str";
-    }
-    else if (token_type == PYTOK_LIST_INT){
-      c_type="arr_int";
-    }
-    else if (token_type == PYTOK_LIST_FLOAT){
-      c_type="arr_float";
-    }
-    else if (token_type == PYTOK_LIST_STR){
-      c_type="arr_str";
-    }
-    else if (token_type == PYTOK_BOOLEAN){
-      c_type="bool";
-    }
+    
+    
     if (token_type != UNKNOWN)
     {
       Token *token =
