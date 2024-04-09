@@ -56,31 +56,10 @@ PythonTokenType peekToken(Token *token)
     }
 }
 
-TreeNode *initMain(TreeNode *program)
-{
-    TreeNode *mainNode;
-    /* add child to program node */
-    addChild(program, createNode("FunctionDefinition", create_token(PYTOK_DEF, "main", 0, 0, NULL)));
-    mainNode = program->children[program->num_children - 1];
-
-    /* add identifier */
-    addChild(mainNode, createNode("Identifier", create_token(PYTOK_IDENTIFIER, "main", 0, 0, NULL)));
-
-    /* add return type */
-    addChild(mainNode, createNode("Return", create_token(PYTOK_RETURN, "int", 0, 0, "int")));
-
-    /* add block */
-    addChild(mainNode, createNode("Block", NULL));
-    mainNode = mainNode->children[mainNode->num_children - 1];
-
-    return mainNode;
-}
-
 TreeNode *buildParseTreeFromTokens(Token **tokens, size_t num_tokens)
 {
     TreeNode *program = createNode("Program", NULL);
     TreeNode *currentNode = program;
-    TreeNode *mainNode = initMain(program);
     size_t index = 0;
     Token *currentToken = tokens[index];
 
@@ -91,7 +70,7 @@ TreeNode *buildParseTreeFromTokens(Token **tokens, size_t num_tokens)
         switch (currentToken->type)
         {
         case PYTOK_FOR:
-            index = parseForStatement(tokens, mainNode, index);
+            index = parseForStatement(tokens, currentNode, index);
             currentToken = tokens[index];
             currentNode = currentNode->children[currentNode->num_children - 1];
             break;
@@ -105,7 +84,7 @@ TreeNode *buildParseTreeFromTokens(Token **tokens, size_t num_tokens)
             break;
 
         case PYTOK_PRINT:
-            index = parsePrint(tokens, mainNode, index);
+            index = parsePrint(tokens, currentNode, index);
             if (index < num_tokens)
             {
                 currentToken = tokens[index];
@@ -113,7 +92,7 @@ TreeNode *buildParseTreeFromTokens(Token **tokens, size_t num_tokens)
             currentNode = program;
             break;
         case PYTOK_ELSE:
-            index = parseElseStatement(tokens, mainNode, index);
+            index = parseElseStatement(tokens, currentNode, index);
             if (index < num_tokens)
             {
                 currentToken = tokens[index];
@@ -121,7 +100,7 @@ TreeNode *buildParseTreeFromTokens(Token **tokens, size_t num_tokens)
             currentNode = currentNode->children[currentNode->num_children - 1];
             break;
         case PYTOK_IF:
-            index = parseIfStatement(tokens, mainNode, index);
+            index = parseIfStatement(tokens, currentNode, index);
             if (index < num_tokens)
             {
                 currentToken = tokens[index];
@@ -132,20 +111,19 @@ TreeNode *buildParseTreeFromTokens(Token **tokens, size_t num_tokens)
             /* check if there is () after identifier */
             if (peekToken(tokens[index + 1]) == PYTOK_LEFTPARENTHESIS)
             {
-                index = parseFunctionCall(tokens, mainNode, index);
+                index = parseFunctionCall(tokens, currentNode, index);
             }
             else
             {
-                index = parseExpression(tokens, mainNode, index);
+                index = parseExpression(tokens, currentNode, index);
             }
             if (index < num_tokens)
             {
                 currentToken = tokens[index];
             }
-            currentNode = currentNode->children[currentNode->num_children - 1];
             break;
         case PYTOK_WHILE:
-            index = parseWhileStatement(tokens, mainNode, index);
+            index = parseWhileStatement(tokens, currentNode, index);
             if (index < num_tokens)
             {
                 currentToken = tokens[index];
@@ -353,8 +331,28 @@ size_t parseReturnStatement(Token **tokens, TreeNode *currentNode, size_t index)
     currentNode = currentNode->children[currentNode->num_children - 1];
     index++;
 
-    addChild(currentNode, createNode("Identifier", tokens[index]));
-    index++;
+    /* check next token */
+    switch (peekToken(tokens[index]))
+    {
+    case PYTOK_IDENTIFIER:
+        addChild(currentNode, createNode("Identifier", tokens[index]));
+        index++;
+        break;
+    case PYTOK_INT:
+        addChild(currentNode, createNode("IntLiteral", tokens[index]));
+        index++;
+        break;
+    case PYTOK_FLOAT:
+        addChild(currentNode, createNode("FloatLiteral", tokens[index]));
+        index++;
+        break;
+    case PYTOK_STRING:
+        addChild(currentNode, createNode("StringLiteral", tokens[index]));
+        index++;
+        break;
+    default:
+        break;
+    }
 
     return index;
 }
