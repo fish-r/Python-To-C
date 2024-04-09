@@ -1,4 +1,5 @@
 #include "../include/lexer.h"
+#include "../include/utils.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,6 +22,15 @@ const char *pythonDelimitersList[] = {
 
 const char *specialPythonTokensList[] = {"'", "\"", "#", "\\"};
 const char *unusedPythonTokensList[] = {"$", "?", "`"};
+
+/* Unimplemented Keywords List*/
+const char *unImplementedKeywordsTokenList[] = { 
+    "and", "as", "assert", "class", "del", "except", 
+    "exec", "finally", "from", "global","import", 
+    "in", "is", "lambda", "not", "or", "pass", "raise",  
+    "try",  "with", "yield"};
+const char *unImplementedOperatorsTokenList[] = { "**","//","@",":=" };
+const char *unImplementedDelimitersTokenList[] = { "{","}","//","@=","**=" };
 
 typedef enum
 {
@@ -48,7 +58,6 @@ PythonTokenType is_python_keyword(const char *lexeme)
       return i;
     }
   }
-
   return UNKNOWN;
 }
 
@@ -346,6 +355,7 @@ Token **lex(char *source_code)
   size_t current_position = 0;
   int current_line_number = 1;
   int current_indentation = 0;
+  char *c_type=NULL;
 
   PythonTokenType token_type = UNKNOWN;
   size_t longest_match = 0;
@@ -354,6 +364,7 @@ Token **lex(char *source_code)
 
   while (current_position < source_code_length)
   {
+    c_type=NULL;
     token_type = UNKNOWN;
     longest_match = 0;
     memset(matched_lexeme, 0, sizeof(matched_lexeme));
@@ -436,16 +447,42 @@ Token **lex(char *source_code)
       }
     }
 
+    /* Check for error */
+    checkAndThrowError(matched_lexeme, unImplementedKeywordsTokenList, numUnImplementedKeywordsTokenList, "Keyword", current_line_number);
+    checkAndThrowError(matched_lexeme, unImplementedOperatorsTokenList, numUnImplementedOperatorsTokenList, "Operator", current_line_number);
+    checkAndThrowError(matched_lexeme, unImplementedDelimitersTokenList, numUnImplementedDelimitersTokenList, "Delimiter", current_line_number);
+    /* Assign c_type */
+    if (token_type == PYTOK_INT){
+      c_type="int";
+    }
+    else if (token_type == PYTOK_FLOAT){
+      c_type="float";
+    }
+    else if (token_type == PYTOK_STRING){
+      c_type="str";
+    }
+    else if (token_type == PYTOK_LIST_INT){
+      c_type="arr_int";
+    }
+    else if (token_type == PYTOK_LIST_FLOAT){
+      c_type="arr_float";
+    }
+    else if (token_type == PYTOK_LIST_STR){
+      c_type="arr_str";
+    }
+    else if (token_type == PYTOK_BOOLEAN){
+      c_type="bool";
+    }
     if (token_type != UNKNOWN)
     {
       Token *token =
-          create_token(token_type, matched_lexeme, current_line_number, current_indentation);
+          create_token(token_type, matched_lexeme, current_line_number, current_indentation, c_type);
       token_stream =
           (Token **)realloc(token_stream, (token_count + 1) * sizeof(Token *));
       token_stream[token_count] = token;
       token_count++;
-      printf("Token { type: %d, lexeme: '%s', line: '%d', num_indentation, '%d'}\n", token->type,
-             token->lexeme, token->line_number, token->num_indentation);
+      printf("Token { type: %d, lexeme: '%s', line: '%d', num_indentation, '%d', c_type, '%s'}\n", token->type,
+             token->lexeme, token->line_number, token->num_indentation, token->c_type);
       current_position += longest_match;
     }
     else
@@ -455,13 +492,15 @@ Token **lex(char *source_code)
           source_code[current_position] != '\t' &&
           source_code[current_position] != '\r')
       {
-        printf("Error: Unrecognized character '%c' at line %d\n",
-               source_code[current_position], current_line_number);
+      throwError("Unimplemented Unknown Token '%s' at line %d\n",
+                  matched_lexeme, current_line_number);
       }
       ++current_position;
+
+     
     }
   }
-  token_stream[token_count] = create_token(PYTOK_EOF, "EOF", 0, 0);
+  token_stream[token_count] = create_token(PYTOK_EOF, "EOF", 0, 0, "EOF");
   return token_stream;
   /* ignore below cos token_stream is needed
   for (i = 0; i < token_count; i++)
@@ -476,13 +515,14 @@ Token **lex(char *source_code)
   */
 }
 
-Token *create_token(PythonTokenType type, const char *lexeme, int line_number, int num_indentation)
+Token *create_token(PythonTokenType type, const char *lexeme, int line_number, int num_indentation, char *c_type)
 {
   Token *token = (Token *)malloc(sizeof(Token));
   token->type = type;
   token->lexeme = strdup(lexeme);
   token->line_number = line_number;
   token->num_indentation = num_indentation;
+  token->c_type = c_type;
   return token;
 }
 
