@@ -119,6 +119,20 @@ void process_node(TreeNode *current_node, State *current_state) {
       write_to_file(current_node->token->lexeme);
       write_to_file(";\n");
     }
+  } else if (*current_state == WRITE_EXPRESSION) {
+    if (strcmp(current_node->label, "Identifier") == 0) {
+      write_to_file(current_node->token->c_type);
+      write_to_file(current_node->token->lexeme);
+    } else if (strcmp(current_node->label, "Operator") == 0) {
+      write_to_file(current_node->token->lexeme);
+    } else if (strcmp(current_node->label, "IntLiteral") == 0) {
+      write_to_file(current_node->token->lexeme);
+      write_to_file(";\n");
+    } else if (strcmp(current_node->label, "StringLiteral") == 0) {
+      write_to_file(current_node->token->c_type);
+      write_to_file(current_node->token->lexeme);
+      write_to_file(";\n");
+    }
   }
 }
 
@@ -138,6 +152,8 @@ void set_state(State *current_state, TreeNode *current_node) {
     *current_state = WRITE_ELSE_STMT;
   } else if (strcmp(current_node->label, "ReturnStatement") == 0) {
     *current_state = WRITE_RETURN;
+  } else if (strcmp(current_node->label, "Expression") == 0) {
+    *current_state = WRITE_EXPRESSION;
   } else {
     return;
   }

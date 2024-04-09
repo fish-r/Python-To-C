@@ -11,6 +11,7 @@ typedef enum {
   WRITE_PRINT_STMT,
   WRITE_ELSE_STMT,
   WRITE_RETURN,
+  WRITE_EXPRESSION,
   STATE_END
 } State;
 
