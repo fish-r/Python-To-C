@@ -30,5 +30,6 @@ size_t parseElseStatement(Token **tokens, TreeNode *currentNode, size_t index);
 size_t parseReturnStatement(Token **tokens, TreeNode *currentNode, size_t index);
 size_t parseExpression(Token **tokens, TreeNode *currentNode, size_t index);
 size_t parseWhileStatement(Token **tokens, TreeNode *currentNode, size_t index);
+size_t parseFunctionCall(Token **tokens, TreeNode *currentNode, size_t index);
 
 #endif
