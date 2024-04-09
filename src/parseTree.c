@@ -133,8 +133,14 @@ TreeNode *buildParseTreeFromTokens(Token **tokens, size_t num_tokens)
         case PYTOK_EOF:
             index++;
             break;
-        default:
+        case PYTOK_EOL:
             index++;
+            currentToken = tokens[index];
+            break;
+        default:
+            /* skip current token and move to next token */
+            index++;
+            currentToken = tokens[index];
             break;
         }
     }
@@ -224,31 +230,32 @@ size_t parsePrint(Token **tokens, TreeNode *currentNode, size_t index)
 
     /* skip left paran */
     index++;
+    printf("%d\n", tokens[index]->type);
 
     /* add print value as child */
     switch (tokens[index]->type)
     {
     case PYTOK_CHAR:
-        addChild(currentNode, createNode("CharLiteral", tokens[index]));
+        addChild(currentNode, createNode("Literal", tokens[index]));
         index++;
         break;
     case PYTOK_STRING:
-        addChild(currentNode, createNode("StringLiteral", tokens[index]));
+        printf("enter string\n");
+        addChild(currentNode, createNode("Literal", tokens[index]));
         index++;
         break;
     case PYTOK_INT:
-        addChild(currentNode, createNode("IntLiteral", tokens[index]));
+        addChild(currentNode, createNode("Literal", tokens[index]));
         index++;
         break;
     case PYTOK_FLOAT:
-        addChild(currentNode, createNode("FloatLiteral", tokens[index]));
+        addChild(currentNode, createNode("Literal", tokens[index]));
         index++;
         break;
     case PYTOK_IDENTIFIER:
         addChild(currentNode, createNode("Identifier", tokens[index]));
         index++;
         break;
-    
 
     default:
         break;
@@ -256,6 +263,13 @@ size_t parsePrint(Token **tokens, TreeNode *currentNode, size_t index)
 
     /* skip right paran */
     index++;
+
+    /* check if next token is eol, add child and remove if yes */
+    if (peekToken(tokens[index]) == PYTOK_EOL)
+    {
+        addChild(currentNode, createNode("EOL", NULL));
+        index++;
+    }
 
     return index;
 }
@@ -357,6 +371,12 @@ size_t parseReturnStatement(Token **tokens, TreeNode *currentNode, size_t index)
     default:
         break;
     }
+    /* check if next token is eol, add child and remove if yes */
+    if (peekToken(tokens[index]) == PYTOK_EOL)
+    {
+        addChild(currentNode, createNode("EOL", NULL));
+        index++;
+    }
 
     return index;
 }
@@ -397,15 +417,19 @@ size_t parseExpression(Token **tokens, TreeNode *currentNode, size_t index)
             }
             break;
         case PYTOK_STRING:
-            addChild(currentNode, createNode("StringLiteral", tokens[index]));
+            addChild(currentNode, createNode("Literal", tokens[index]));
             index++;
             break;
         case PYTOK_INT:
-            addChild(currentNode, createNode("IntLiteral", tokens[index]));
+            addChild(currentNode, createNode("Literal", tokens[index]));
             index++;
             break;
         case PYTOK_FLOAT:
-            addChild(currentNode, createNode("FloatLiteral", tokens[index]));
+            addChild(currentNode, createNode("Literal", tokens[index]));
+            index++;
+            break;
+        case PYTOK_CHAR:
+            addChild(currentNode, createNode("Literal", tokens[index]));
             index++;
             break;
         default:
@@ -416,6 +440,12 @@ size_t parseExpression(Token **tokens, TreeNode *currentNode, size_t index)
         if ((peekToken(tokens[index]) >= PYTOK_PLUS) && (peekToken(tokens[index]) <= PYTOK_UNEQUALITY))
         {
             addChild(currentNode, createNode("Operator", tokens[index]));
+            index++;
+        }
+        /* check if next token is eol, add child and remove if yes */
+        if (peekToken(tokens[index]) == PYTOK_EOL)
+        {
+            addChild(currentNode, createNode("EOL", NULL));
             index++;
         }
     }
@@ -457,6 +487,13 @@ size_t parseFunctionCall(Token **tokens, TreeNode *currentNode, size_t index)
     /* skip right param */
     index++;
 
+    /* check if next token is eol, add child and remove if yes */
+    if (peekToken(tokens[index]) == PYTOK_EOL)
+    {
+        addChild(currentNode, createNode("EOL", NULL));
+        index++;
+    }
+
     return index;
 }
 
@@ -466,6 +503,9 @@ size_t parseBlock(Token **tokens, TreeNode *currentNode, size_t index)
     int indent;
 
     /* skip colon keyword */
+    index++;
+    /* add eol as child */
+    addChild(currentNode, createNode("EOL", NULL));
     index++;
 
     /* set current indent level */
