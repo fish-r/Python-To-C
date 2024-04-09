@@ -9,6 +9,11 @@
 #define numSpecialPythonTokens 4
 #define numUnusedPythonTokens 3
 
+
+#define numUnImplementedKeywordsTokenList 21
+#define numUnImplementedOperatorsTokenList 4
+#define numUnImplementedDelimitersTokenList 5
+
 typedef enum
 {
   /* Keywords */
