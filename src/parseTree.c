@@ -230,8 +230,6 @@ size_t parsePrint(Token **tokens, TreeNode *currentNode, size_t index)
 
     /* skip left paran */
     index++;
-    printf("%d\n", tokens[index]->type);
-
     /* add print value as child */
     switch (tokens[index]->type)
     {
@@ -240,8 +238,8 @@ size_t parsePrint(Token **tokens, TreeNode *currentNode, size_t index)
         index++;
         break;
     case PYTOK_STRING:
-        printf("enter string\n");
         addChild(currentNode, createNode("Literal", tokens[index]));
+        printf("token ctype: %s\n", tokens[index]->c_type);
         index++;
         break;
     case PYTOK_INT:
@@ -393,6 +391,41 @@ size_t parseExpression(Token **tokens, TreeNode *currentNode, size_t index)
 
     /* add identifier as child */
     addChild(currentNode, createNode("Identifier", tokens[index]));
+
+    /* check and assign c_type for identifier */
+    if (peekToken(tokens[index + 1]) == PYTOK_ASSIGNMENT)
+    {
+        switch (peekToken(tokens[index + 2]))
+        {
+        case PYTOK_CHAR:
+            tokens[index]->c_type = "char";
+            break;
+        case PYTOK_STRING:
+            tokens[index]->c_type = "str";
+            break;
+        case PYTOK_INT:
+            tokens[index]->c_type = "int";
+            break;
+        case PYTOK_FLOAT:
+            tokens[index]->c_type = "float";
+            break;
+        case PYTOK_LIST_FLOAT:
+            tokens[index]->c_type = "arr_float";
+            break;
+        case PYTOK_LIST_INT:
+            tokens[index]->c_type = "arr_int";
+            break;
+        case PYTOK_LIST_STR:
+            tokens[index]->c_type = "arr_str";
+            break;
+        case PYTOK_BOOLEAN:
+            tokens[index]->c_type = "bool";
+            break;
+        default:
+            break;
+        }
+    }
+
     index++;
 
     /* add operator as child */
