@@ -1,5 +1,6 @@
-def func1(x):
-    x = func1(x,y)
-    func1(x,y)
-y= func2(x,y)
-func2(x,y)
+def print_function(x, y):
+    if x > y:
+        print("Hello World")
+
+    else:
+        print(1)

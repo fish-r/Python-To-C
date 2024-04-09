@@ -47,7 +47,7 @@ void process_node(TreeNode *current_node, State *current_state) {
   /*printf("Current node address %p\n", (void *)current_node);*/
   if (*current_state == WRITE_INCLUDES) {
     if (strcmp(current_node->label, "Program") == 0) {
-      write_to_file("#include <stdio.h>\n#include <stdlib.h>\n");
+      write_to_file("#include <stdio.h>\n#include <stdlib.h>\n\n");
     }
   }
 
@@ -100,11 +100,11 @@ void process_node(TreeNode *current_node, State *current_state) {
       write_to_file(current_node->token->lexeme);
       write_to_file(");\n");
     } else if (strcmp(current_node->label, "FloatLiteral") == 0) {
-      write_to_file("\"%f\", ");
+      write_to_file("\"%f\\n\", ");
       write_to_file(current_node->token->lexeme);
       write_to_file(");\n");
     } else if (strcmp(current_node->label, "IntLiteral") == 0) {
-      write_to_file("\"%d\",");
+      write_to_file("\"%d\\n\",");
       write_to_file(current_node->token->lexeme);
       write_to_file(");\n");
     }
