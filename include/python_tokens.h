@@ -125,8 +125,9 @@ typedef enum
   PYTOK_LIST_STR,
 
   /* EOF */
-  PYTOK_EOF
-
+  PYTOK_EOF,
+  /* EOL */
+  PYTOK_EOL
 } PythonTokenType;
 
 #endif /* PYTHON_TOKENS_H */

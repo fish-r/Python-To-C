@@ -375,6 +375,12 @@ Token **lex(char *source_code)
     /* Check indentation at the beginning of the line*/
     if (source_code[current_position] == '\n')
     {
+      Token *eol_token = create_token(PYTOK_EOL, "EOL", current_line_number, current_indentation, "EOL");
+      token_stream = (Token **)realloc(token_stream, (token_count + 1) * sizeof(Token *));
+      token_stream[token_count] = eol_token;
+      token_count++;
+      printf("Token { type: EOL, lexeme: 'PYTOK_EOL', line: '%d', num_indentation, '%d', c_type, '%s'}\n", current_line_number,current_indentation,"EOL" );
+      
       current_indentation = 0;
       ++current_line_number;
       ++current_position;
