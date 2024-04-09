@@ -1,6 +1,5 @@
-def func1(x,y):
-    x = "test"
-    print("in func")
-
-while x==1:
-    print("s")
+def func1(x):
+    x = func1(x,y)
+    func1(x,y)
+y= func2(x,y)
+func2(x,y)
