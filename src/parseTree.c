@@ -71,8 +71,11 @@ TreeNode *buildParseTreeFromTokens(Token **tokens, size_t num_tokens)
         {
         case PYTOK_FOR:
             index = parseForStatement(tokens, currentNode, index);
-            currentToken = tokens[index];
-            currentNode = currentNode->children[currentNode->num_children - 1];
+            if (index < num_tokens)
+            {
+                currentToken = tokens[index];
+            }
+            currentNode = program;
             break;
         case PYTOK_DEF:
             index = parseFuncDef(tokens, currentNode, index);
@@ -150,26 +153,89 @@ TreeNode *buildParseTreeFromTokens(Token **tokens, size_t num_tokens)
 
 size_t parseForStatement(Token **tokens, TreeNode *currentNode, size_t index)
 {
-    /* add child */
+    TreeNode *forNode;
+
+    /* add for as child */
     addChild(currentNode, createNode("ForStatement", tokens[index]));
     currentNode = currentNode->children[currentNode->num_children - 1];
     index++;
+
+    /* set for node as current node */
+    forNode = currentNode;
+
+    /* add identifier as child */
+    addChild(currentNode, createNode("Identifier", tokens[index]));
+    index++;
+
+    /* add iterable as child */
+    addChild(currentNode, createNode("Iterable", NULL));
+    currentNode = currentNode->children[currentNode->num_children - 1];
+
+    /* skip in keyword */
+    index++;
+
     /* peek next token */
-    if (peekToken(tokens[index]) == PYTOK_IDENTIFIER)
+    switch (peekToken(tokens[index]))
     {
-        /* add identifier to child */
-        addChild(currentNode, createNode("Identifier", tokens[index]));
+    case PYTOK_RANGE:
+        /* add range as child */
+        addChild(currentNode, createNode("Range", NULL));
+        currentNode = currentNode->children[currentNode->num_children - 1];
+        index++;
+        /* skip left paran */
         index++;
 
-        /* skip in keyword */
-        index++;
+        do
+        {
+            /* check if next token is comma */
+            if (peekToken(tokens[index]) == PYTOK_COMMA)
+            {
+                /* skip comma token */
+                index++;
+            }
+            /* add term as child */
+            addChild(currentNode, createNode("Term", tokens[index]));
+            index++;
+        } while (peekToken(tokens[index]) == PYTOK_COMMA);
 
-        /* add string literal to child */
-        addChild(currentNode, createNode("StringLiteral", tokens[index]));
+        /* skip right paran and parse block */
+        index = parseBlock(tokens, forNode, index+1);
+        break;
+    case PYTOK_STRING:
+        /* add string as child */
+        addChild(currentNode, createNode("String", NULL));
         index++;
+        currentNode = currentNode->children[currentNode->num_children - 1];
 
         /* parse block */
-        index = parseBlock(tokens, currentNode, index);
+        index = parseBlock(tokens, forNode, index);
+        break;
+    case PYTOK_CHAR:
+        /* add string as child */
+        addChild(currentNode, createNode("Char", NULL));
+        index++;
+        currentNode = currentNode->children[currentNode->num_children - 1];
+
+        /* parse block */
+        index = parseBlock(tokens, forNode, index);
+        break;
+    case PYTOK_IDENTIFIER:
+        /* add string as child */
+        addChild(currentNode, createNode("Identifier", tokens[index]));
+        index++;
+        currentNode = currentNode->children[currentNode->num_children - 1];
+
+        /* parse block */
+        index = parseBlock(tokens, forNode, index);
+        break;
+    case PYTOK_LIST_FLOAT:
+        break;
+    case PYTOK_LIST_INT:
+        break;
+    case PYTOK_LIST_STR:
+        break;
+    default:
+        break;
     }
     return index;
 }
