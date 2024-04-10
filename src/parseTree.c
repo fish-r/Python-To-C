@@ -61,7 +61,8 @@ char *findReturnType(Token **tokens, size_t index)
     while (tokens[index]->type != PYTOK_RETURN || tokens[index]->type != PYTOK_EOF)
     {
         /* check if current token is EOF */
-        if(tokens[index]->type == PYTOK_EOF){
+        if (tokens[index]->type == PYTOK_EOF)
+        {
             return "void";
         }
         index++;
@@ -90,7 +91,6 @@ TreeNode *buildParseTreeFromTokens(Token **tokens, size_t num_tokens)
             }
             break;
         case PYTOK_DEF:
-            printf("here\n");
             index = parseFuncDef(tokens, currentNode, index);
             if (index < num_tokens)
             {
@@ -151,9 +151,23 @@ TreeNode *buildParseTreeFromTokens(Token **tokens, size_t num_tokens)
         case PYTOK_EOF:
             index++;
             break;
+        case PYTOK_COMMENT:
+            index = parseComments(tokens, currentNode, index);
+            if (index < num_tokens)
+            {
+                currentToken = tokens[index];
+            }
+            break;
+        case PYTOK_MULTI_COMMENT:
+            index = parseComments(tokens, currentNode, index);
+            if (index < num_tokens)
+            {
+                currentToken = tokens[index];
+            }
+            break;
         case PYTOK_EOL:
             index++;
-            /*currentToken = tokens[index];*/
+            currentToken = tokens[index];
             break;
         default:
             /* skip current token and move to next token */
@@ -164,6 +178,25 @@ TreeNode *buildParseTreeFromTokens(Token **tokens, size_t num_tokens)
     }
     printf("Build parse tree end\n");
     return program;
+}
+
+size_t parseComments(Token **tokens, TreeNode *currentNode, size_t index)
+{
+    /* add comment as child */
+    addChild(currentNode, createNode("Comment", tokens[index]));
+    index++;
+    /* check for EOL */
+    if (tokens[index]->type == PYTOK_EOL)
+    {
+        addChild(currentNode, createNode("EOL", NULL));
+        index++;
+        /* remove all subsequent eol */
+        while(tokens[index]->type == PYTOK_EOL){
+            index++;
+        }
+    }
+
+    return index;
 }
 
 size_t parseForStatement(Token **tokens, TreeNode *currentNode, size_t index)
@@ -347,6 +380,12 @@ size_t parsePrint(Token **tokens, TreeNode *currentNode, size_t index)
     /* skip right paran */
     index++;
 
+    /* check for comments */
+    if (peekToken(tokens[index]) == PYTOK_COMMENT || peekToken(tokens[index]) == PYTOK_MULTI_COMMENT)
+    {
+        index = parseComments(tokens, currentNode, index);
+    }
+
     /* check if next token is eol, add child and remove if yes */
     if (peekToken(tokens[index]) == PYTOK_EOL)
     {
@@ -458,6 +497,11 @@ size_t parseReturnStatement(Token **tokens, TreeNode *currentNode, size_t index)
     default:
         break;
     }
+    /* check for comments */
+    if (peekToken(tokens[index]) == PYTOK_COMMENT || peekToken(tokens[index]) == PYTOK_MULTI_COMMENT)
+    {
+        index = parseComments(tokens, currentNode, index);
+    }
     /* check if next token is eol, add child and remove if yes */
     if (peekToken(tokens[index]) == PYTOK_EOL)
     {
@@ -564,6 +608,13 @@ size_t parseExpression(Token **tokens, TreeNode *currentNode, size_t index)
             addChild(currentNode, createNode("Operator", tokens[index]));
             index++;
         }
+
+        /* check for comments */
+        if (peekToken(tokens[index]) == PYTOK_COMMENT || peekToken(tokens[index]) == PYTOK_MULTI_COMMENT)
+        {
+            index = parseComments(tokens, currentNode, index);
+        }
+
         /* check if next token is eol, add child and remove if yes */
         if (peekToken(tokens[index]) == PYTOK_EOL)
         {
@@ -603,11 +654,22 @@ size_t parseFunctionCall(Token **tokens, TreeNode *currentNode, size_t index)
     /* skip left param */
     index++;
 
-    /* parse params */
-    index = parseParamList(tokens, currentNode, index);
+    /* parse params if have */
+    if (tokens[index]->type != PYTOK_RIGHTPARENTHESIS)
+    {
 
+        index = parseParamList(tokens, currentNode, index);
+    }
     /* skip right param */
     index++;
+
+    printf("current token: %s\n", tokens[index]->lexeme);
+
+    /* check for comments */
+    if (peekToken(tokens[index]) == PYTOK_COMMENT || peekToken(tokens[index]) == PYTOK_MULTI_COMMENT)
+    {
+        index = parseComments(tokens, currentNode, index);
+    }
 
     /* check if next token is eol, add child and remove if yes */
     if (peekToken(tokens[index]) == PYTOK_EOL)
@@ -626,9 +688,19 @@ size_t parseBlock(Token **tokens, TreeNode *currentNode, size_t index)
 
     /* skip colon keyword */
     index++;
-    /* add eol as child */
-    addChild(currentNode, createNode("EOL", NULL));
-    index++;
+
+    /* check for comments */
+    if (tokens[index]->type == PYTOK_COMMENT || tokens[index]->type == PYTOK_MULTI_COMMENT)
+    {
+        index = parseComments(tokens, currentNode, index);
+    }
+
+    /* check for eol, add eol as child */
+    if (tokens[index]->type == PYTOK_EOL)
+    {
+        addChild(currentNode, createNode("EOL", NULL));
+        index++;
+    }
 
     /* set current indent level */
     indent = tokens[index]->num_indentation;
