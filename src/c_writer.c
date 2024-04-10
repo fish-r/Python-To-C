@@ -45,37 +45,42 @@ void process_node(TreeNode *current_node, State *current_state) {
   /* printf("Current State: %d, Current Label: %s\n", *current_state,
           current_node->label);*/
   /*printf("Current node address %p\n", (void *)current_node);*/
+
   if (*current_state == WRITE_INCLUDES) {
     if (strcmp(current_node->label, "Program") == 0) {
       write_to_file("#include <stdio.h>\n#include <stdlib.h>\n\n");
     }
   }
 
+  if (strcmp(current_node->label, "Block") == 0) {
+    write_to_file("{\n");
+  }
+
   if (*current_state == WRITE_FN_DEF) {
-
-    if (strcmp(current_node->label, "FunctionDefinition") == 0) {
-      /*TODO: change to return type later*/
-      write_to_file("void ");
-
-    } else if (strcmp(current_node->label, "Identifier") == 0) {
+    if (strcmp(current_node->label, "Identifier") == 0) {
+      write_to_file(current_node->token->c_type);
+      write_to_file(" ");
       write_to_file(current_node->token->lexeme);
       write_to_file("( ");
 
     } else if (strcmp(current_node->label, "Parameter") == 0) {
-      write_to_file("int ");
+      write_to_file("int");
+      write_to_file(" ");
       write_to_file(current_node->token->lexeme);
 
-    } else if (strcmp(current_node->label, "Block") == 0) {
-      write_to_file(") {\n");
+    } else if (strcmp(current_node->label, "EOL") == 0) {
+      write_to_file(")\n");
     }
+    return;
   }
 
   else if (*current_state == WRITE_IF_STMT) {
     if (strcmp(current_node->label, "IfStatement") == 0) {
       write_to_file("if (");
-    } else if (strcmp(current_node->label, "Block") == 0) {
-      write_to_file(") {\n");
+    } else if (strcmp(current_node->label, "EOL") == 0) {
+      write_to_file(")");
     }
+    return;
   }
 
   else if (*current_state == WRITE_CONDITION) {
@@ -85,55 +90,73 @@ void process_node(TreeNode *current_node, State *current_state) {
       write_to_file(" ");
       write_to_file(current_node->token->lexeme);
       write_to_file(" ");
-    } else if (strcmp(current_node->label, "Block") == 0) {
-      write_to_file(") {\n");
     }
+    return;
   }
 
   else if (*current_state == WRITE_PRINT_STMT) {
     if (strcmp(current_node->label, "PrintStatement") == 0) {
       write_to_file("printf(");
-    } else if (strcmp(current_node->label, "StringLiteral") == 0) {
+    } else if (strcmp(current_node->label, "Literal") == 0) {
       write_to_file(current_node->token->lexeme);
-      write_to_file(");\n");
-    } else if (strcmp(current_node->label, "FloatLiteral") == 0) {
-      write_to_file("\"%f\\n\", ");
+      write_to_file(")");
+    } else if (strcmp(current_node->label, "Literal") == 0) {
+      if (strcmp(current_node->token->c_type, "int") == 0) {
+        write_to_file("\"%d\\n\", ");
+      } else if (strcmp(current_node->token->c_type, "float") == 0) {
+        write_to_file("\"%f\\n\", ");
+      } else if (strcmp(current_node->token->c_type, "string") == 0) {
+        write_to_file("\"%f\\n\", ");
+      }
       write_to_file(current_node->token->lexeme);
-      write_to_file(");\n");
-    } else if (strcmp(current_node->label, "IntLiteral") == 0) {
-      write_to_file("\"%d\\n\",");
-      write_to_file(current_node->token->lexeme);
-      write_to_file(");\n");
+      write_to_file(")");
+    } else if (strcmp(current_node->label, "EOL") == 0) {
+      write_to_file("; \n");
     }
-  } else if (*current_state == WRITE_ELSE_STMT) {
+    return;
+  }
+
+  else if (*current_state == WRITE_ELSE_STMT) {
     if (strcmp(current_node->label, "ElseStatement") == 0) {
-      write_to_file("else{\n");
-    } else if (strcmp(current_node->label, "StringLiteral") == 0) {
-      write_to_file(current_node->token->lexeme);
-      write_to_file(");\n");
+      write_to_file("else\n");
+    } else if (strcmp(current_node->label, "EOL") == 0) {
+      write_to_file("\n");
     }
-  } else if (*current_state == WRITE_RETURN) {
+    return;
+  }
+
+  else if (*current_state == WRITE_RETURN) {
     if (strcmp(current_node->label, "ReturnStatement") == 0) {
       write_to_file("return ");
-    } else if (strcmp(current_node->label, "IntLiteral") == 0) {
+    } else if (strcmp(current_node->label, "Literal") == 0) {
       write_to_file(current_node->token->lexeme);
+    } else if (strcmp(current_node->label, "EOL") == 0) {
       write_to_file(";\n");
     }
-  } else if (*current_state == WRITE_EXPRESSION) {
+
+    return;
+  }
+
+  else if (*current_state == WRITE_EXPRESSION) {
     if (strcmp(current_node->label, "Identifier") == 0) {
       write_to_file(current_node->token->c_type);
+      write_to_file(" ");
       write_to_file(current_node->token->lexeme);
     } else if (strcmp(current_node->label, "Operator") == 0) {
       write_to_file(current_node->token->lexeme);
-    } else if (strcmp(current_node->label, "IntLiteral") == 0) {
+    } else if (strcmp(current_node->label, "Literal") == 0) {
       write_to_file(current_node->token->lexeme);
-      write_to_file(";\n");
-    } else if (strcmp(current_node->label, "StringLiteral") == 0) {
+    } else if (strcmp(current_node->label, "Literal") == 0) {
       write_to_file(current_node->token->c_type);
       write_to_file(current_node->token->lexeme);
+    } else if (strcmp(current_node->label, "EOL") == 0) {
       write_to_file(";\n");
     }
+
+    return;
   }
+
+  return;
 }
 
 void set_state(State *current_state, TreeNode *current_node) {
