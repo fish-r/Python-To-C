@@ -20,7 +20,7 @@ const char *pythonDelimitersList[] = {
     ";", "@", "=", "+=", "-=", "*=", "/=", "//", "%=",
     "@=", "&=", "|=", "^=", ">>", "<<", "**="};
 
-const char *specialPythonTokensList[] = {"'", "\"", "#", "\\"};
+const char *specialPythonTokensList[] = {"'", "\"", "\\"};
 const char *unusedPythonTokensList[] = {"$", "?", "`"};
 
 /* Unimplemented Keywords List*/
@@ -362,6 +362,61 @@ PythonTokenType is_python_list(const char *lexeme, size_t *matched_length, int *
     return UNKNOWN;
 }
 
+PythonTokenType is_python_comment(const char *lexeme, size_t *matched_length)
+{
+    char comment_symbol = *lexeme;
+    size_t length = 0;
+
+    if (comment_symbol == '#')
+    {
+        const char *ptr = lexeme + 1;
+        length++;
+        
+        /* continue until end of line or encounter a newline character */
+        while (*ptr != '\0' && *ptr != '\n')
+        {
+            ptr++;
+            length++;
+        }
+
+        if (*ptr == '\n' || *ptr == '\0')
+        {
+            *matched_length = length;
+            return PYTOK_COMMENT;
+        }
+    }
+
+    *matched_length = 0;
+    return UNKNOWN;
+}
+PythonTokenType is_python_multi_comment(const char *lexeme, size_t *matched_length)
+{
+    /* Check if it starts with a multi-line comment symbol*/
+    if (strncmp(lexeme, "\"\"\"", 3) == 0 || strncmp(lexeme, "'''", 3) == 0)
+    {
+        const char *ptr = lexeme + 3;
+        size_t length = 3;
+
+        /* continue until end of the multi-line comment symbol or the end of the string */
+        while (*ptr != '\0' && !(strncmp(ptr, "\"\"\"", 3) == 0 || strncmp(ptr, "'''", 3) == 0))
+        {
+            ptr++;
+            length++;
+        }
+
+        if (*ptr != '\0')
+        {
+            length += 3;
+            *matched_length = length;
+            return PYTOK_MULTI_COMMENT;
+        }
+    }
+
+    *matched_length = 0;
+    return UNKNOWN;
+}
+
+
 Token **lex(char *source_code)
 {
   size_t i;
@@ -454,8 +509,10 @@ Token **lex(char *source_code)
         longest_match = candidate_match_length;
         strcpy(matched_lexeme, candidate_lexeme);
       }
-      else if ((candidate_token_type = is_python_numeric(candidate_lexeme, &candidate_match_length)) != UNKNOWN||
-      (candidate_token_type = is_python_string(candidate_lexeme, &candidate_match_length)) != UNKNOWN){
+      else if ((candidate_token_type = is_python_numeric(candidate_lexeme, &candidate_match_length)) != UNKNOWN ||
+      (candidate_token_type = is_python_multi_comment(candidate_lexeme, &candidate_match_length)) != UNKNOWN ||
+      (candidate_token_type = is_python_string(candidate_lexeme, &candidate_match_length)) != UNKNOWN ||
+      (candidate_token_type = is_python_comment(candidate_lexeme, &candidate_match_length)) != UNKNOWN){
         token_type = candidate_token_type;
         longest_match = candidate_match_length;
         strncpy(matched_lexeme, candidate_lexeme, candidate_match_length);
@@ -501,6 +558,12 @@ Token **lex(char *source_code)
         break;
       case (PYTOK_BOOLEAN):
         c_type="bool";
+        break;
+      case (PYTOK_COMMENT):
+        c_type="comment";
+        break;
+      case (PYTOK_MULTI_COMMENT):
+        c_type="multi_comment";
         break;
       default:
         c_type=NULL;
