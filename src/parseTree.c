@@ -185,6 +185,7 @@ size_t parseComments(Token **tokens, TreeNode *currentNode, size_t index)
     /* add comment as child */
     addChild(currentNode, createNode("Comment", tokens[index]));
     index++;
+    
     /* check for EOL */
     if (tokens[index]->type == PYTOK_EOL)
     {
@@ -195,6 +196,7 @@ size_t parseComments(Token **tokens, TreeNode *currentNode, size_t index)
             index++;
         }
     }
+
 
     return index;
 }
@@ -744,6 +746,12 @@ size_t parseBlock(Token **tokens, TreeNode *currentNode, size_t index)
             {
                 index = parseExpression(tokens, currentNode, index);
             }
+            break;
+        case PYTOK_COMMENT:
+            index = parseComments(tokens, currentNode, index);
+            break;
+        case PYTOK_MULTI_COMMENT:
+            index = parseComments(tokens, currentNode, index);
             break;
         case PYTOK_EOL:
             index++;
