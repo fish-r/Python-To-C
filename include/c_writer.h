@@ -12,13 +12,14 @@ typedef enum {
   WRITE_ELSE_STMT,
   WRITE_RETURN,
   WRITE_EXPRESSION,
+  WRITE_LOOP,
   STATE_END
 } State;
 
-void traverse_tree(TreeNode *root, State *prev_state);
+void traverse_tree(TreeNode *root, State *prev_state, TreeNode *temp_node);
 void set_state(State * current_state, TreeNode *current_node);
 void write_c_file(TreeNode *root);
-void process_node(TreeNode *current_node, State *current_state);
+void process_node(TreeNode *current_node, State *current_state, TreeNode *temp_node);
 /* Utils */
 void write_to_file( char *content);
 void clear_file(char *filename);
