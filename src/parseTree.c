@@ -56,6 +56,15 @@ PythonTokenType peekToken(Token *token)
     }
 }
 
+char *findReturnType(Token **tokens, size_t index)
+{
+    while(tokens[index]->type != PYTOK_RETURN)
+    {
+        index++;
+    }
+    return tokens[index+1]->c_type;
+}
+
 TreeNode *buildParseTreeFromTokens(Token **tokens, size_t num_tokens)
 {
     TreeNode *program = createNode("Program", NULL);
@@ -242,17 +251,23 @@ size_t parseForStatement(Token **tokens, TreeNode *currentNode, size_t index)
 
 size_t parseFuncDef(Token **tokens, TreeNode *currentNode, size_t index)
 {
+    /* find return type */
+    char* returnType = findReturnType(tokens, index);
+
     /* add child */
     addChild(currentNode, createNode("FunctionDefinition", tokens[index]));
     currentNode = currentNode->children[currentNode->num_children - 1];
     index++;
 
+    /* set identifier c_type to return type */
+    tokens[index]->c_type = strdup(returnType);
     /* add identifier as child */
     addChild(currentNode, createNode("Identifier", tokens[index]));
     index++;
 
     /* skip left paranthesis */
     index++;
+
 
     /* peek at next token -> if no params */
     if (peekToken(tokens[index]) == PYTOK_RIGHTPARENTHESIS)
@@ -305,7 +320,6 @@ size_t parsePrint(Token **tokens, TreeNode *currentNode, size_t index)
         break;
     case PYTOK_STRING:
         addChild(currentNode, createNode("Literal", tokens[index]));
-        printf("token ctype: %s\n", tokens[index]->c_type);
         index++;
         break;
     case PYTOK_INT:
@@ -421,15 +435,19 @@ size_t parseReturnStatement(Token **tokens, TreeNode *currentNode, size_t index)
         index++;
         break;
     case PYTOK_INT:
-        addChild(currentNode, createNode("IntLiteral", tokens[index]));
+        addChild(currentNode, createNode("Literal", tokens[index]));
         index++;
         break;
     case PYTOK_FLOAT:
-        addChild(currentNode, createNode("FloatLiteral", tokens[index]));
+        addChild(currentNode, createNode("Literal", tokens[index]));
         index++;
         break;
     case PYTOK_STRING:
-        addChild(currentNode, createNode("StringLiteral", tokens[index]));
+        addChild(currentNode, createNode("Literal", tokens[index]));
+        index++;
+        break;
+    case PYTOK_CHAR:
+        addChild(currentNode, createNode("Literal", tokens[index]));
         index++;
         break;
     default:
