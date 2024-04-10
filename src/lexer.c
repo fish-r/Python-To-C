@@ -20,7 +20,7 @@ const char *pythonDelimitersList[] = {
     ";", "@", "=", "+=", "-=", "*=", "/=", "//", "%=",
     "@=", "&=", "|=", "^=", ">>", "<<", "**="};
 
-const char *specialPythonTokensList[] = {"'", "\"", "#", "\\"};
+const char *specialPythonTokensList[] = {"'", "\"", "\\"};
 const char *unusedPythonTokensList[] = {"$", "?", "`"};
 
 /* Unimplemented Keywords List*/
@@ -274,77 +274,148 @@ PythonTokenType is_python_none(const char *lexeme)
   return UNKNOWN;
 }
 
-PythonTokenType is_python_list(const char *lexeme, size_t *matched_length)
+PythonTokenType is_python_list(const char *lexeme, size_t *matched_length, int *list_length)
 {
-  size_t length = 0;
-  int in_quotes = 0;
-  int is_int_list = 1;
-  int is_float_list = 1;
+    size_t length = 0;
+    int in_quotes = 0;
+    int is_int_list = 1;
+    int is_float_list = 1;
 
-  while (is_whitespace(*lexeme))
-  {
-    lexeme++;
-    length++;
-  }
+    *list_length = 0;
 
-  if (*lexeme == '[')
-  {
-    lexeme++;
-    length++;
-
-    while (*lexeme != '\0')
+    while (is_whitespace(*lexeme))
     {
-      if (*lexeme == '"')
-      {
-        in_quotes = !in_quotes;
-      }
-
-      if (!in_quotes && is_whitespace(*lexeme))
-      {
         lexeme++;
         length++;
-        continue;
-      }
-
-      if (*lexeme == ']' && !in_quotes)
-      {
-        length++;
-        *matched_length = length;
-
-        if (is_int_list)
-        {
-          return PYTOK_LIST_INT;
-        }
-        else if (is_float_list)
-        {
-          return PYTOK_LIST_FLOAT;
-        }
-        else
-        {
-          return PYTOK_LIST_STR;
-        }
-      }
-
-      if (!in_quotes && *lexeme != ',' && *lexeme != '[' && *lexeme != ']')
-      {
-        if (*lexeme != '-' && !is_digit(*lexeme))
-        {
-          is_int_list = 0;
-        }
-        if (!is_digit(*lexeme) && *lexeme != '.' && *lexeme != '-')
-        {
-          is_float_list = 0;
-        }
-      }
-
-      lexeme++;
-      length++;
     }
-  }
 
-  *matched_length = 0;
-  return UNKNOWN;
+    if (*lexeme == '[')
+    {
+        /* empty list case */
+        if (*(lexeme + 1) == ']')
+        {
+            *matched_length = 2; 
+            return PYTOK_LIST_INT; 
+        }
+
+        lexeme++;
+        length++;
+
+        while (*lexeme != '\0')
+        {
+
+            if (*lexeme == '"')
+            {
+                in_quotes = !in_quotes;
+            }
+
+            if (!in_quotes && is_whitespace(*lexeme))
+            {
+                lexeme++;
+                length++;
+                continue;
+            }
+
+            if (*lexeme == ']' && !in_quotes)
+            {
+                length++;
+                *matched_length = length; 
+                (*list_length)++; /* account for last element */
+
+                if (is_int_list)
+                {
+                    return PYTOK_LIST_INT;
+                }
+                else if (is_float_list)
+                {
+                    return PYTOK_LIST_FLOAT;
+                }
+                else
+                {
+                    return PYTOK_LIST_STR;
+                }
+            }
+            /* add list length every comma*/
+            if (*lexeme == ',' && !in_quotes)
+            {
+                (*list_length)++;
+            }
+
+            if (!in_quotes && *lexeme != ',' && *lexeme != '[' && *lexeme != ']')
+            {
+                if (*lexeme != '-' && !is_digit(*lexeme))
+                {
+                    is_int_list = 0;
+                }
+                if (!is_digit(*lexeme) && *lexeme != '.' && *lexeme != '-')
+                {
+                    is_float_list = 0;
+                }
+            }
+
+            lexeme++;
+            length++;
+        }
+    }
+
+    *matched_length = 0;
+    return UNKNOWN;
 }
+
+PythonTokenType is_python_comment(const char *lexeme, size_t *matched_length)
+{
+    char comment_symbol = *lexeme;
+    size_t length = 0;
+
+    if (comment_symbol == '#')
+    {
+        const char *ptr = lexeme + 1;
+        length++;
+        
+        /* continue until end of line or encounter a newline character */
+        while (*ptr != '\0' && *ptr != '\n')
+        {
+            ptr++;
+            length++;
+        }
+
+        if (*ptr == '\n' || *ptr == '\0')
+        {
+            *matched_length = length;
+            return PYTOK_COMMENT;
+        }
+    }
+
+    *matched_length = 0;
+    return UNKNOWN;
+}
+PythonTokenType is_python_multi_comment(const char *lexeme, size_t *matched_length)
+{
+    /* Check if it starts with a multi-line comment symbol*/
+    if (strncmp(lexeme, "\"\"\"", 3) == 0 || strncmp(lexeme, "'''", 3) == 0)
+    {
+        const char *ptr = lexeme + 3;
+        size_t length = 3;
+
+        /* continue until end of the multi-line comment symbol or the end of the string */
+        while (*ptr != '\0' && !(strncmp(ptr, "\"\"\"", 3) == 0 || strncmp(ptr, "'''", 3) == 0))
+        {
+            ptr++;
+            length++;
+        }
+
+        if (*ptr != '\0')
+        {
+            length += 3;
+            *matched_length = length;
+            return PYTOK_MULTI_COMMENT;
+        }
+    }
+
+    *matched_length = 0;
+    return UNKNOWN;
+}
+
 
 Token **lex(char *source_code)
 {
@@ -359,6 +430,8 @@ Token **lex(char *source_code)
   int current_line_number = 1;
   int current_indentation = 0;
   char *c_type=NULL;
+  int str_length = 0;
+  int list_length=0;
 
   PythonTokenType token_type = UNKNOWN;
   size_t longest_match = 0;
@@ -370,16 +443,18 @@ Token **lex(char *source_code)
     c_type=NULL;
     token_type = UNKNOWN;
     longest_match = 0;
+    str_length = 0;
+    list_length=0;
     memset(matched_lexeme, 0, sizeof(matched_lexeme));
 
     /* Check indentation at the beginning of the line*/
     if (source_code[current_position] == '\n')
     {
-      Token *eol_token = create_token(PYTOK_EOL, "EOL", current_line_number, current_indentation, "EOL");
+      Token *eol_token = create_token(PYTOK_EOL, "EOL", current_line_number, current_indentation, "EOL", str_length);
       token_stream = (Token **)realloc(token_stream, (token_count + 1) * sizeof(Token *));
       token_stream[token_count] = eol_token;
       token_count++;
-      printf("Token { type: EOL, lexeme: 'PYTOK_EOL', line: '%d', num_indentation, '%d', c_type, '%s'}\n", current_line_number,current_indentation,"EOL" );
+      printf("Token { type: EOL, lexeme: 'PYTOK_EOL', line: '%d', num_indentation: '%d', c_type: '%s', str_length: '%d'}\n", current_line_number,current_indentation,"EOL",str_length);
       
       current_indentation = 0;
       ++current_line_number;
@@ -434,26 +509,22 @@ Token **lex(char *source_code)
         longest_match = candidate_match_length;
         strcpy(matched_lexeme, candidate_lexeme);
       }
-      else if ((candidate_token_type = is_python_numeric(candidate_lexeme, &candidate_match_length)) != UNKNOWN)
-      {
+      else if ((candidate_token_type = is_python_numeric(candidate_lexeme, &candidate_match_length)) != UNKNOWN ||
+      (candidate_token_type = is_python_multi_comment(candidate_lexeme, &candidate_match_length)) != UNKNOWN ||
+      (candidate_token_type = is_python_string(candidate_lexeme, &candidate_match_length)) != UNKNOWN ||
+      (candidate_token_type = is_python_comment(candidate_lexeme, &candidate_match_length)) != UNKNOWN){
         token_type = candidate_token_type;
         longest_match = candidate_match_length;
         strncpy(matched_lexeme, candidate_lexeme, candidate_match_length);
       }
-      else if ((candidate_token_type = is_python_string(candidate_lexeme, &candidate_match_length)) !=
-               UNKNOWN)
+      else if ((candidate_token_type = is_python_list(candidate_lexeme, &candidate_match_length, &list_length)) != UNKNOWN)
       {
         token_type = candidate_token_type;
         longest_match = candidate_match_length;
+        str_length=list_length;
         strncpy(matched_lexeme, candidate_lexeme, candidate_match_length);
       }
-      else if ((candidate_token_type = is_python_list(candidate_lexeme, &candidate_match_length)) !=
-               UNKNOWN)
-      {
-        token_type = candidate_token_type;
-        longest_match = candidate_match_length;
-        strncpy(matched_lexeme, candidate_lexeme, candidate_match_length);
-      }
+      
     }
 
     /* Check for error */
@@ -470,9 +541,11 @@ Token **lex(char *source_code)
         break;
       case (PYTOK_CHAR):
         c_type="char";
+        str_length=1;
         break;
       case (PYTOK_STRING):
         c_type="str";
+        str_length=longest_match-2;
         break;
       case (PYTOK_LIST_INT):
         c_type="arr_int";
@@ -486,8 +559,17 @@ Token **lex(char *source_code)
       case (PYTOK_BOOLEAN):
         c_type="bool";
         break;
+      case (PYTOK_COMMENT):
+        c_type="comment";
+        str_length=longest_match;
+        break;
+      case (PYTOK_MULTI_COMMENT):
+        c_type="multi_comment";
+        str_length=longest_match;
+        break;
       default:
         c_type=NULL;
+        str_length=longest_match;
         break;
     }
     
@@ -495,13 +577,13 @@ Token **lex(char *source_code)
     if (token_type != UNKNOWN)
     {
       Token *token =
-          create_token(token_type, matched_lexeme, current_line_number, current_indentation, c_type);
+          create_token(token_type, matched_lexeme, current_line_number, current_indentation, c_type, str_length);
       token_stream =
           (Token **)realloc(token_stream, (token_count + 1) * sizeof(Token *));
       token_stream[token_count] = token;
       token_count++;
-      printf("Token { type: %d, lexeme: '%s', line: '%d', num_indentation, '%d', c_type, '%s'}\n", token->type,
-             token->lexeme, token->line_number, token->num_indentation, token->c_type);
+      printf("Token { type: %d, lexeme: '%s', line: '%d', num_indentation: '%d', c_type: '%s', str_length: '%d'}\n", token->type,
+             token->lexeme, token->line_number, token->num_indentation, token->c_type, str_length);
       current_position += longest_match;
     }
     else
@@ -519,7 +601,7 @@ Token **lex(char *source_code)
      
     }
   }
-  token_stream[token_count] = create_token(PYTOK_EOF, "EOF", 0, 0, "EOF");
+  token_stream[token_count] = create_token(PYTOK_EOF, "EOF", 0, 0, "EOF", str_length);
   return token_stream;
   /* ignore below cos token_stream is needed
   for (i = 0; i < token_count; i++)
@@ -534,7 +616,7 @@ Token **lex(char *source_code)
   */
 }
 
-Token *create_token(PythonTokenType type, const char *lexeme, int line_number, int num_indentation, char *c_type)
+Token *create_token(PythonTokenType type, const char *lexeme, int line_number, int num_indentation, char *c_type, int str_length)
 {
   Token *token = (Token *)malloc(sizeof(Token));
   token->type = type;
@@ -542,6 +624,7 @@ Token *create_token(PythonTokenType type, const char *lexeme, int line_number, i
   token->line_number = line_number;
   token->num_indentation = num_indentation;
   token->c_type = c_type;
+  token->str_length = str_length;
   return token;
 }
 

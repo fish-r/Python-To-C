@@ -6,7 +6,7 @@
 #define numPythonKeywords 31
 #define numPythonOperators 21
 #define numPythonDelimiters 23
-#define numSpecialPythonTokens 4
+#define numSpecialPythonTokens 3
 #define numUnusedPythonTokens 3
 
 
@@ -100,7 +100,6 @@ typedef enum
   /* Special Tokens */
   PYTOK_SINGLEQUOTE,
   PYTOK_DOUBLEQUOTE,
-  PYTOK_HASH,
   PYTOK_BACKSLASH,
 
   /* Unused Tokens */
@@ -128,7 +127,11 @@ typedef enum
   /* EOF */
   PYTOK_EOF,
   /* EOL */
-  PYTOK_EOL
+  PYTOK_EOL,
+  /* Single Line Comment*/
+  PYTOK_COMMENT,
+  /* Multi Line Comment*/
+  PYTOK_MULTI_COMMENT
 } PythonTokenType;
 
 #endif /* PYTHON_TOKENS_H */
