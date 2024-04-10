@@ -104,6 +104,7 @@ TreeNode *buildParseTreeFromTokens(Token **tokens, size_t num_tokens)
             currentNode = program;
             break;
         case PYTOK_ELSE:
+            printf("enter\n");
             index = parseElseStatement(tokens, currentNode, index);
             if (index < num_tokens)
             {
@@ -667,6 +668,9 @@ size_t parseBlock(Token **tokens, TreeNode *currentNode, size_t index)
             {
                 index = parseExpression(tokens, currentNode, index);
             }
+            break;
+        case PYTOK_EOL:
+            index++;
             break;
         default:
             break;
