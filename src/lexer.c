@@ -561,9 +561,11 @@ Token **lex(char *source_code)
         break;
       case (PYTOK_COMMENT):
         c_type="comment";
+        str_length=longest_match;
         break;
       case (PYTOK_MULTI_COMMENT):
         c_type="multi_comment";
+        str_length=longest_match;
         break;
       default:
         c_type=NULL;
