@@ -70,6 +70,17 @@ char *findReturnType(Token **tokens, size_t index)
     return tokens[index + 1]->c_type;
 }
 
+int findNumParams(Token **tokens, size_t index){
+    int count = 0;
+    while(tokens[index]->type != PYTOK_RIGHTPARENTHESIS){
+        if (tokens[index]->type == PYTOK_INT){
+            count++;
+        }
+        index++;
+    }
+    return count;
+}
+
 TreeNode *buildParseTreeFromTokens(Token **tokens, size_t num_tokens)
 {
     TreeNode *program = createNode("Program", NULL);
@@ -172,7 +183,10 @@ TreeNode *buildParseTreeFromTokens(Token **tokens, size_t num_tokens)
         default:
             /* skip current token and move to next token */
             index++;
-            currentToken = tokens[index];
+            if (index < num_tokens)
+            {
+                currentToken = tokens[index];
+            }
             break;
         }
     }
@@ -204,6 +218,7 @@ size_t parseComments(Token **tokens, TreeNode *currentNode, size_t index)
 size_t parseForStatement(Token **tokens, TreeNode *currentNode, size_t index)
 {
     TreeNode *forNode;
+    int numParams = 0;
 
     /* add for as child */
     addChild(currentNode, createNode("ForStatement", tokens[index]));
@@ -235,18 +250,63 @@ size_t parseForStatement(Token **tokens, TreeNode *currentNode, size_t index)
         /* skip left paran */
         index++;
 
-        do
+        numParams = findNumParams(tokens, index);
+        printf("num param: %d\n", numParams);
+
+        /* check for number of params */
+        if (numParams == 1){
+            addChild(currentNode, createNode("Start", create_token(PYTOK_INT, "0", 0, 0, "int", 0)));
+
+            addChild(currentNode, createNode("Stop", tokens[index]));
+            index++;
+
+            addChild(currentNode, createNode("Step", create_token(PYTOK_INT, "1", 0, 0, "int", 0)));
+
+        }
+        else if (numParams == 2)
         {
-            /* check if next token is comma */
+            addChild(currentNode, createNode("Start", tokens[index]));
+            index++;
+
+            /* skip comma */
+            index++;
+
+            addChild(currentNode, createNode("Stop", tokens[index]));
+            index++;
+
+            addChild(currentNode, createNode("Step", create_token(PYTOK_INT, "1", 0, 0, "int", 0)));
+        }
+        else{
+            /* num params = 3 */
+            addChild(currentNode, createNode("Start", tokens[index]));
+            index++;
+
+            /* skip comma */
+            index++;
+
+            addChild(currentNode, createNode("Stop", tokens[index]));
+            index++;
+
+            /* skip comma */
+            index++;
+
+            addChild(currentNode, createNode("Step", tokens[index]));
+            index++;
+        }
+        
+
+        /*do
+        {
+
             if (peekToken(tokens[index]) == PYTOK_COMMA)
             {
-                /* skip comma token */
+ 
                 index++;
             }
-            /* add term as child */
+
             addChild(currentNode, createNode("Term", tokens[index]));
             index++;
-        } while (peekToken(tokens[index]) == PYTOK_COMMA);
+        } while (peekToken(tokens[index]) == PYTOK_COMMA);*/
 
         /* skip right paran and parse block */
         index = parseBlock(tokens, forNode, index + 1);
