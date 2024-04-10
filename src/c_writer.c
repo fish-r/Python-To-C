@@ -60,6 +60,7 @@ void process_node(TreeNode *current_node, State *current_state,
 
   if (*current_state == WRITE_FN_DEF) {
     if (strcmp(current_node->label, "Identifier") == 0) {
+      printf("return type %s\n", current_node->token->c_type);
       write_to_file(current_node->token->c_type);
       write_to_file(" ");
       write_to_file(current_node->token->lexeme);
@@ -132,30 +133,25 @@ void process_node(TreeNode *current_node, State *current_state,
 
   else if (*current_state == WRITE_LOOP) {
     if (strcmp(current_node->label, "ForStatement") == 0) {
-      printf("write loop");
       write_to_file("for (");
     } else if (strcmp(current_node->label, "Identifier") == 0) {
       /*      write_to_file(current_node->token->c_type);
             write_to_file(" ");
             write_to_file(current_node->token->lexeme);*/
       *temp_node = *current_node;
-      printf("temp node lexeme %s\n", temp_node->token->lexeme);
-      printf("current node lexeme %s\n", current_node->token->lexeme);
-      printf("addr of temp_node %p\n", (void *)temp_node);
 
     } else if (strcmp(current_node->label, "Start") == 0) {
-      printf("addr of temp_node %p\n", (void *)temp_node);
       write_to_file(current_node->token->c_type);
       write_to_file(" ");
       write_to_file(temp_node->token->lexeme);
       write_to_file(" = ");
       write_to_file(current_node->token->lexeme);
-      write_to_file(";");
+      write_to_file("; ");
     } else if (strcmp(current_node->label, "Stop") == 0) {
       write_to_file(temp_node->token->lexeme);
       write_to_file(" < ");
       write_to_file(current_node->token->lexeme);
-      write_to_file(";");
+      write_to_file("; ");
     } else if (strcmp(current_node->label, "Step") == 0) {
       write_to_file(temp_node->token->lexeme);
       write_to_file(" += ");
