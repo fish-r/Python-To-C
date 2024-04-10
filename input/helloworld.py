@@ -1,7 +1,7 @@
 def print_function(x, y):
-    y = 5
+    z = 5
     if x > y:
         print("H")
     else:
-        print(1)
+        print(z)
         return 0

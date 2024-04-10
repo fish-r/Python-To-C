@@ -108,6 +108,10 @@ void process_node(TreeNode *current_node, State *current_state) {
       }
       write_to_file(current_node->token->lexeme);
       write_to_file(")");
+    } else if (strcmp(current_node->label, "Identifier") == 0) {
+      /*write_to_file(current_node->token->c_type);*/
+      write_to_file(current_node->token->lexeme);
+      write_to_file(")");
     } else if (strcmp(current_node->label, "EOL") == 0) {
       write_to_file("; \n");
     }
