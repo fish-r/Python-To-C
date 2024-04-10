@@ -357,7 +357,6 @@ size_t parseFuncDef(Token **tokens, TreeNode *currentNode, size_t index)
 {
     /* find return type */
     char *returnType = findReturnType(tokens, index);
-    printf("return type: %s\n", returnType);
 
     /* add child */
     addChild(currentNode, createNode("FunctionDefinition", tokens[index]));
