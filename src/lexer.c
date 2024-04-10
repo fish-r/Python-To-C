@@ -359,6 +359,7 @@ Token **lex(char *source_code)
   int current_line_number = 1;
   int current_indentation = 0;
   char *c_type=NULL;
+  int str_length = 0;
 
   PythonTokenType token_type = UNKNOWN;
   size_t longest_match = 0;
@@ -375,11 +376,11 @@ Token **lex(char *source_code)
     /* Check indentation at the beginning of the line*/
     if (source_code[current_position] == '\n')
     {
-      Token *eol_token = create_token(PYTOK_EOL, "EOL", current_line_number, current_indentation, "EOL");
+      Token *eol_token = create_token(PYTOK_EOL, "EOL", current_line_number, current_indentation, "EOL", str_length);
       token_stream = (Token **)realloc(token_stream, (token_count + 1) * sizeof(Token *));
       token_stream[token_count] = eol_token;
       token_count++;
-      printf("Token { type: EOL, lexeme: 'PYTOK_EOL', line: '%d', num_indentation, '%d', c_type, '%s'}\n", current_line_number,current_indentation,"EOL" );
+      printf("Token { type: EOL, lexeme: 'PYTOK_EOL', line: '%d', num_indentation: '%d', c_type: '%s', str_length: '%d'}\n", current_line_number,current_indentation,"EOL",str_length);
       
       current_indentation = 0;
       ++current_line_number;
@@ -473,6 +474,7 @@ Token **lex(char *source_code)
         break;
       case (PYTOK_STRING):
         c_type="str";
+        str_length=longest_match-2;
         break;
       case (PYTOK_LIST_INT):
         c_type="arr_int";
@@ -488,6 +490,7 @@ Token **lex(char *source_code)
         break;
       default:
         c_type=NULL;
+        str_length=longest_match;
         break;
     }
     
@@ -495,13 +498,13 @@ Token **lex(char *source_code)
     if (token_type != UNKNOWN)
     {
       Token *token =
-          create_token(token_type, matched_lexeme, current_line_number, current_indentation, c_type);
+          create_token(token_type, matched_lexeme, current_line_number, current_indentation, c_type, str_length);
       token_stream =
           (Token **)realloc(token_stream, (token_count + 1) * sizeof(Token *));
       token_stream[token_count] = token;
       token_count++;
-      printf("Token { type: %d, lexeme: '%s', line: '%d', num_indentation, '%d', c_type, '%s'}\n", token->type,
-             token->lexeme, token->line_number, token->num_indentation, token->c_type);
+      printf("Token { type: %d, lexeme: '%s', line: '%d', num_indentation, '%d', c_type, '%s', length, '%d'}\n", token->type,
+             token->lexeme, token->line_number, token->num_indentation, token->c_type, str_length);
       current_position += longest_match;
     }
     else
@@ -519,7 +522,7 @@ Token **lex(char *source_code)
      
     }
   }
-  token_stream[token_count] = create_token(PYTOK_EOF, "EOF", 0, 0, "EOF");
+  token_stream[token_count] = create_token(PYTOK_EOF, "EOF", 0, 0, "EOF", str_length);
   return token_stream;
   /* ignore below cos token_stream is needed
   for (i = 0; i < token_count; i++)
@@ -534,7 +537,7 @@ Token **lex(char *source_code)
   */
 }
 
-Token *create_token(PythonTokenType type, const char *lexeme, int line_number, int num_indentation, char *c_type)
+Token *create_token(PythonTokenType type, const char *lexeme, int line_number, int num_indentation, char *c_type, int str_length)
 {
   Token *token = (Token *)malloc(sizeof(Token));
   token->type = type;
@@ -542,6 +545,7 @@ Token *create_token(PythonTokenType type, const char *lexeme, int line_number, i
   token->line_number = line_number;
   token->num_indentation = num_indentation;
   token->c_type = c_type;
+  token->str_length = str_length;
   return token;
 }
 
