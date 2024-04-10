@@ -65,6 +65,9 @@ char *findReturnType(Token **tokens, size_t index)
         {
             return "void";
         }
+        if (tokens[index]->type == PYTOK_RETURN){
+            return tokens[index + 1]->c_type;
+        }
         index++;
     }
     return tokens[index + 1]->c_type;
@@ -354,6 +357,7 @@ size_t parseFuncDef(Token **tokens, TreeNode *currentNode, size_t index)
 {
     /* find return type */
     char *returnType = findReturnType(tokens, index);
+    printf("return type: %s\n", returnType);
 
     /* add child */
     addChild(currentNode, createNode("FunctionDefinition", tokens[index]));
