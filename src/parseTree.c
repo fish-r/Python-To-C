@@ -56,6 +56,15 @@ PythonTokenType peekToken(Token *token)
     }
 }
 
+char *findReturnType(Token **tokens, size_t index)
+{
+    while(tokens[index]->type != PYTOK_RETURN)
+    {
+        index++;
+    }
+    return tokens[index+1]->c_type;
+}
+
 TreeNode *buildParseTreeFromTokens(Token **tokens, size_t num_tokens)
 {
     TreeNode *program = createNode("Program", NULL);
@@ -71,8 +80,11 @@ TreeNode *buildParseTreeFromTokens(Token **tokens, size_t num_tokens)
         {
         case PYTOK_FOR:
             index = parseForStatement(tokens, currentNode, index);
-            currentToken = tokens[index];
-            currentNode = currentNode->children[currentNode->num_children - 1];
+            if (index < num_tokens)
+            {
+                currentToken = tokens[index];
+            }
+            currentNode = program;
             break;
         case PYTOK_DEF:
             index = parseFuncDef(tokens, currentNode, index);
@@ -133,8 +145,14 @@ TreeNode *buildParseTreeFromTokens(Token **tokens, size_t num_tokens)
         case PYTOK_EOF:
             index++;
             break;
-        default:
+        case PYTOK_EOL:
             index++;
+            currentToken = tokens[index];
+            break;
+        default:
+            /* skip current token and move to next token */
+            index++;
+            currentToken = tokens[index];
             break;
         }
     }
@@ -144,43 +162,112 @@ TreeNode *buildParseTreeFromTokens(Token **tokens, size_t num_tokens)
 
 size_t parseForStatement(Token **tokens, TreeNode *currentNode, size_t index)
 {
-    /* add child */
+    TreeNode *forNode;
+
+    /* add for as child */
     addChild(currentNode, createNode("ForStatement", tokens[index]));
     currentNode = currentNode->children[currentNode->num_children - 1];
     index++;
+
+    /* set for node as current node */
+    forNode = currentNode;
+
+    /* add identifier as child */
+    addChild(currentNode, createNode("Identifier", tokens[index]));
+    index++;
+
+    /* add iterable as child */
+    addChild(currentNode, createNode("Iterable", NULL));
+    currentNode = currentNode->children[currentNode->num_children - 1];
+
+    /* skip in keyword */
+    index++;
+
     /* peek next token */
-    if (peekToken(tokens[index]) == PYTOK_IDENTIFIER)
+    switch (peekToken(tokens[index]))
     {
-        /* add identifier to child */
-        addChild(currentNode, createNode("Identifier", tokens[index]));
+    case PYTOK_RANGE:
+        /* add range as child */
+        addChild(currentNode, createNode("Range", NULL));
+        currentNode = currentNode->children[currentNode->num_children - 1];
+        index++;
+        /* skip left paran */
         index++;
 
-        /* skip in keyword */
-        index++;
+        do
+        {
+            /* check if next token is comma */
+            if (peekToken(tokens[index]) == PYTOK_COMMA)
+            {
+                /* skip comma token */
+                index++;
+            }
+            /* add term as child */
+            addChild(currentNode, createNode("Term", tokens[index]));
+            index++;
+        } while (peekToken(tokens[index]) == PYTOK_COMMA);
 
-        /* add string literal to child */
-        addChild(currentNode, createNode("StringLiteral", tokens[index]));
+        /* skip right paran and parse block */
+        index = parseBlock(tokens, forNode, index+1);
+        break;
+    case PYTOK_STRING:
+        /* add string as child */
+        addChild(currentNode, createNode("String", NULL));
         index++;
+        currentNode = currentNode->children[currentNode->num_children - 1];
 
         /* parse block */
-        index = parseBlock(tokens, currentNode, index);
+        index = parseBlock(tokens, forNode, index);
+        break;
+    case PYTOK_CHAR:
+        /* add string as child */
+        addChild(currentNode, createNode("Char", NULL));
+        index++;
+        currentNode = currentNode->children[currentNode->num_children - 1];
+
+        /* parse block */
+        index = parseBlock(tokens, forNode, index);
+        break;
+    case PYTOK_IDENTIFIER:
+        /* add string as child */
+        addChild(currentNode, createNode("Identifier", tokens[index]));
+        index++;
+        currentNode = currentNode->children[currentNode->num_children - 1];
+
+        /* parse block */
+        index = parseBlock(tokens, forNode, index);
+        break;
+    case PYTOK_LIST_FLOAT:
+        break;
+    case PYTOK_LIST_INT:
+        break;
+    case PYTOK_LIST_STR:
+        break;
+    default:
+        break;
     }
     return index;
 }
 
 size_t parseFuncDef(Token **tokens, TreeNode *currentNode, size_t index)
 {
+    /* find return type */
+    char* returnType = findReturnType(tokens, index);
+
     /* add child */
     addChild(currentNode, createNode("FunctionDefinition", tokens[index]));
     currentNode = currentNode->children[currentNode->num_children - 1];
     index++;
 
+    /* set identifier c_type to return type */
+    tokens[index]->c_type = strdup(returnType);
     /* add identifier as child */
     addChild(currentNode, createNode("Identifier", tokens[index]));
     index++;
 
     /* skip left paranthesis */
     index++;
+
 
     /* peek at next token -> if no params */
     if (peekToken(tokens[index]) == PYTOK_RIGHTPARENTHESIS)
@@ -224,31 +311,29 @@ size_t parsePrint(Token **tokens, TreeNode *currentNode, size_t index)
 
     /* skip left paran */
     index++;
-
     /* add print value as child */
     switch (tokens[index]->type)
     {
     case PYTOK_CHAR:
-        addChild(currentNode, createNode("CharLiteral", tokens[index]));
+        addChild(currentNode, createNode("Literal", tokens[index]));
         index++;
         break;
     case PYTOK_STRING:
-        addChild(currentNode, createNode("StringLiteral", tokens[index]));
+        addChild(currentNode, createNode("Literal", tokens[index]));
         index++;
         break;
     case PYTOK_INT:
-        addChild(currentNode, createNode("IntLiteral", tokens[index]));
+        addChild(currentNode, createNode("Literal", tokens[index]));
         index++;
         break;
     case PYTOK_FLOAT:
-        addChild(currentNode, createNode("FloatLiteral", tokens[index]));
+        addChild(currentNode, createNode("Literal", tokens[index]));
         index++;
         break;
     case PYTOK_IDENTIFIER:
         addChild(currentNode, createNode("Identifier", tokens[index]));
         index++;
         break;
-    
 
     default:
         break;
@@ -256,6 +341,13 @@ size_t parsePrint(Token **tokens, TreeNode *currentNode, size_t index)
 
     /* skip right paran */
     index++;
+
+    /* check if next token is eol, add child and remove if yes */
+    if (peekToken(tokens[index]) == PYTOK_EOL)
+    {
+        addChild(currentNode, createNode("EOL", NULL));
+        index++;
+    }
 
     return index;
 }
@@ -343,19 +435,29 @@ size_t parseReturnStatement(Token **tokens, TreeNode *currentNode, size_t index)
         index++;
         break;
     case PYTOK_INT:
-        addChild(currentNode, createNode("IntLiteral", tokens[index]));
+        addChild(currentNode, createNode("Literal", tokens[index]));
         index++;
         break;
     case PYTOK_FLOAT:
-        addChild(currentNode, createNode("FloatLiteral", tokens[index]));
+        addChild(currentNode, createNode("Literal", tokens[index]));
         index++;
         break;
     case PYTOK_STRING:
-        addChild(currentNode, createNode("StringLiteral", tokens[index]));
+        addChild(currentNode, createNode("Literal", tokens[index]));
+        index++;
+        break;
+    case PYTOK_CHAR:
+        addChild(currentNode, createNode("Literal", tokens[index]));
         index++;
         break;
     default:
         break;
+    }
+    /* check if next token is eol, add child and remove if yes */
+    if (peekToken(tokens[index]) == PYTOK_EOL)
+    {
+        addChild(currentNode, createNode("EOL", NULL));
+        index++;
     }
 
     return index;
@@ -373,6 +475,41 @@ size_t parseExpression(Token **tokens, TreeNode *currentNode, size_t index)
 
     /* add identifier as child */
     addChild(currentNode, createNode("Identifier", tokens[index]));
+
+    /* check and assign c_type for identifier */
+    if (peekToken(tokens[index + 1]) == PYTOK_ASSIGNMENT)
+    {
+        switch (peekToken(tokens[index + 2]))
+        {
+        case PYTOK_CHAR:
+            tokens[index]->c_type = "char";
+            break;
+        case PYTOK_STRING:
+            tokens[index]->c_type = "str";
+            break;
+        case PYTOK_INT:
+            tokens[index]->c_type = "int";
+            break;
+        case PYTOK_FLOAT:
+            tokens[index]->c_type = "float";
+            break;
+        case PYTOK_LIST_FLOAT:
+            tokens[index]->c_type = "arr_float";
+            break;
+        case PYTOK_LIST_INT:
+            tokens[index]->c_type = "arr_int";
+            break;
+        case PYTOK_LIST_STR:
+            tokens[index]->c_type = "arr_str";
+            break;
+        case PYTOK_BOOLEAN:
+            tokens[index]->c_type = "bool";
+            break;
+        default:
+            break;
+        }
+    }
+
     index++;
 
     /* add operator as child */
@@ -397,15 +534,19 @@ size_t parseExpression(Token **tokens, TreeNode *currentNode, size_t index)
             }
             break;
         case PYTOK_STRING:
-            addChild(currentNode, createNode("StringLiteral", tokens[index]));
+            addChild(currentNode, createNode("Literal", tokens[index]));
             index++;
             break;
         case PYTOK_INT:
-            addChild(currentNode, createNode("IntLiteral", tokens[index]));
+            addChild(currentNode, createNode("Literal", tokens[index]));
             index++;
             break;
         case PYTOK_FLOAT:
-            addChild(currentNode, createNode("FloatLiteral", tokens[index]));
+            addChild(currentNode, createNode("Literal", tokens[index]));
+            index++;
+            break;
+        case PYTOK_CHAR:
+            addChild(currentNode, createNode("Literal", tokens[index]));
             index++;
             break;
         default:
@@ -416,6 +557,12 @@ size_t parseExpression(Token **tokens, TreeNode *currentNode, size_t index)
         if ((peekToken(tokens[index]) >= PYTOK_PLUS) && (peekToken(tokens[index]) <= PYTOK_UNEQUALITY))
         {
             addChild(currentNode, createNode("Operator", tokens[index]));
+            index++;
+        }
+        /* check if next token is eol, add child and remove if yes */
+        if (peekToken(tokens[index]) == PYTOK_EOL)
+        {
+            addChild(currentNode, createNode("EOL", NULL));
             index++;
         }
     }
@@ -457,6 +604,13 @@ size_t parseFunctionCall(Token **tokens, TreeNode *currentNode, size_t index)
     /* skip right param */
     index++;
 
+    /* check if next token is eol, add child and remove if yes */
+    if (peekToken(tokens[index]) == PYTOK_EOL)
+    {
+        addChild(currentNode, createNode("EOL", NULL));
+        index++;
+    }
+
     return index;
 }
 
@@ -466,6 +620,9 @@ size_t parseBlock(Token **tokens, TreeNode *currentNode, size_t index)
     int indent;
 
     /* skip colon keyword */
+    index++;
+    /* add eol as child */
+    addChild(currentNode, createNode("EOL", NULL));
     index++;
 
     /* set current indent level */

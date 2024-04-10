@@ -3,14 +3,14 @@
 #include <stddef.h>
 
 /* Python Tokens and Data */
-#define numPythonKeywords 30
+#define numPythonKeywords 31
 #define numPythonOperators 21
 #define numPythonDelimiters 23
 #define numSpecialPythonTokens 4
 #define numUnusedPythonTokens 3
 
 
-#define numUnImplementedKeywordsTokenList 21
+#define numUnImplementedKeywordsTokenList 20
 #define numUnImplementedOperatorsTokenList 4
 #define numUnImplementedDelimitersTokenList 5
 
@@ -47,6 +47,7 @@ typedef enum
   PYTOK_WHILE,
   PYTOK_WITH,
   PYTOK_YIELD,
+  PYTOK_RANGE,
 
   /* Operators */
   PYTOK_PLUS,

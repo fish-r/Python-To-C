@@ -9,7 +9,7 @@ const char *pythonKeywordsList[] = {
     "and", "as", "assert", "break", "class", "def", "del", "elif",
     "else", "except", "exec", "finally", "for", "from", "global", "if",
     "import", "in", "is", "lambda", "not", "or", "pass", "print",
-    "raise", "return", "try", "while", "with", "yield"};
+    "raise", "return", "try", "while", "with", "yield", "range"};
 
 const char *pythonOperatorsList[] = {"+", "-", "*", "**", "/", "//", "%",
                                      "@", "<<", ">>", "&", "|", "^", "~",
@@ -27,7 +27,7 @@ const char *unusedPythonTokensList[] = {"$", "?", "`"};
 const char *unImplementedKeywordsTokenList[] = { 
     "and", "as", "assert", "class", "del", "except", 
     "exec", "finally", "from", "global","import", 
-    "in", "is", "lambda", "not", "or", "pass", "raise",  
+    "is", "lambda", "not", "or", "pass", "raise",  
     "try",  "with", "yield"};
 const char *unImplementedOperatorsTokenList[] = { "**","//","@",":=" };
 const char *unImplementedDelimitersTokenList[] = { "{","}","//","@=","**=" };
