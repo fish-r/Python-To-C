@@ -217,8 +217,10 @@ PythonTokenType is_python_numeric(const char *lexeme, size_t *matched_length)
   if (*lexeme == '-' || is_digit(*lexeme))
   {
     const char *ptr = lexeme;
-    if (*ptr == '-')
+    if (*ptr == '-'){
       ptr++;
+      length++; 
+    }
     while (is_digit(*ptr) || *ptr == '.')
     {
       if (*ptr == '.')

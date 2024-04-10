@@ -18,6 +18,7 @@ void printParseTree(TreeNode *root, int depth);
 TreeNode *buildParseTree(Token *tokens, size_t num_tokens);
 TreeNode *buildParseTreeFromTokens(Token **tokens, size_t num_tokens);
 char *findReturnType(Token **tokens, size_t index);
+int findNumParams(Token **tokens, size_t index);
 
 PythonTokenType peekToken(Token *token);
 size_t parseForStatement(Token **tokens, TreeNode *currentNode, size_t index);
