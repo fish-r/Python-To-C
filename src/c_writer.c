@@ -61,7 +61,6 @@ void process_node(TreeNode *current_node, State *current_state,
         token_array[*token_count] = current_token;
         (*token_count)++;
       }
-      /*
       printf("Token count after adding: %d\n", *token_count);
       printf("Added token:\n");
       printf("  Lexeme: %s\n", current_token->lexeme);
@@ -70,7 +69,6 @@ void process_node(TreeNode *current_node, State *current_state,
       printf("  Number of Indentation: %d\n", current_token->num_indentation);
       printf("  C Type: %s\n", current_token->c_type);
       printf("  String Length: %d\n", current_token->str_length);
-      */
     }
   }
   if (*current_state == WRITE_INCLUDES) {
@@ -83,12 +81,20 @@ void process_node(TreeNode *current_node, State *current_state,
     write_to_file("{\n");
   }
 
-  else if (*current_state == WRITE_FN_DEF) {
+  if (*current_state == WRITE_FN_DEF) {
     if (strcmp(current_node->label, "Identifier") == 0) {
-      write_to_file(current_node->token->c_type);
-      write_to_file(" ");
-      write_to_file(current_node->token->lexeme);
-      write_to_file("(");
+      printf("return type %s\n", current_node->token->c_type);
+      if (strcmp(current_node->token->c_type, "char []") == 0) {
+        write_to_file("char* ");
+        write_to_file(" ");
+        write_to_file(current_node->token->lexeme);
+        write_to_file("(");
+      } else {
+        write_to_file(current_node->token->c_type);
+        write_to_file(" ");
+        write_to_file(current_node->token->lexeme);
+        write_to_file("(");
+      }
     } else if (strcmp(current_node->label, "Parameter") == 0) {
       write_to_file("int");
       write_to_file(" ");
@@ -142,11 +148,13 @@ void process_node(TreeNode *current_node, State *current_state,
     }
     if (strcmp(current_node->label, "Literal") == 0) {
       if (strcmp(current_node->token->c_type, "int") == 0) {
-        write_to_file("\"%d\\n\", ");
+        write_to_file("\"%d\", ");
       } else if (strcmp(current_node->token->c_type, "float") == 0) {
-        write_to_file("\"%f\\n\", ");
-      } else if (strcmp(current_node->token->c_type, "str") == 0) {
-        write_to_file("\"%s\\n\", ");
+        write_to_file("\"%f\", ");
+      } else if ((strcmp(current_node->token->c_type, "char") == 0)) {
+        write_to_file("\"%c\", ");
+      } else if ((strcmp(current_node->token->c_type, "char []") == 0)) {
+        write_to_file("\"%s\", ");
       }
       write_to_file(current_node->token->lexeme);
       write_to_file(")");
@@ -163,7 +171,9 @@ void process_node(TreeNode *current_node, State *current_state,
         write_to_file("\"%d\", ");
       } else if (strcmp(c_type, "float") == 0) {
         write_to_file("\"%f\", ");
-      } else if (strcmp(c_type, "str") == 0) {
+      } else if ((strcmp(c_type, "char") == 0)) {
+        write_to_file("\"%c\", ");
+      } else if ((strcmp(c_type, "char[]"))) {
         write_to_file("\"%s\", ");
       }
       write_to_file(current_node->token->lexeme);
@@ -217,7 +227,8 @@ void process_node(TreeNode *current_node, State *current_state,
   else if (*current_state == WRITE_RETURN) {
     if (strcmp(current_node->label, "ReturnStatement") == 0) {
       write_to_file("return ");
-    } else if (strcmp(current_node->label, "Literal") == 0) {
+    } else if ((strcmp(current_node->label, "Literal") == 0) ||
+               (strcmp(current_node->label, "Identifier") == 0)) {
       write_to_file(current_node->token->lexeme);
     } else if (strcmp(current_node->label, "EOL") == 0) {
       write_to_file(";\n");
@@ -228,10 +239,18 @@ void process_node(TreeNode *current_node, State *current_state,
 
   else if (*current_state == WRITE_EXPRESSION) {
     if (strcmp(current_node->label, "Identifier") == 0) {
-      write_to_file(current_node->token->c_type);
-      write_to_file(" ");
-      write_to_file(current_node->token->lexeme);
-      write_to_file(" ");
+      if (strcmp(current_node->token->c_type, "char []") == 0) {
+        write_to_file("char");
+        write_to_file(" ");
+        write_to_file(current_node->token->lexeme);
+        write_to_file("[] ");
+      } else {
+        write_to_file(current_node->token->c_type);
+        write_to_file(" ");
+        write_to_file(current_node->token->lexeme);
+        write_to_file(" ");
+      }
+
     } else if (strcmp(current_node->label, "Operator") == 0) {
       write_to_file(current_node->token->lexeme);
       write_to_file(" ");

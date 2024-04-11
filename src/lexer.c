@@ -197,7 +197,7 @@ PythonTokenType is_python_string(const char *lexeme, size_t *matched_length)
     {
       length++;
       *matched_length = length;
-      if (*matched_length == 3)
+      if (*matched_length <= 3)
       {
         return PYTOK_CHAR;
       }
@@ -552,7 +552,7 @@ Token **lex(char *source_code)
       str_length = 1;
       break;
     case (PYTOK_STRING):
-      c_type = "str";
+      c_type = "char []";
       str_length = longest_match - 2;
       break;
     case (PYTOK_LIST_INT):
