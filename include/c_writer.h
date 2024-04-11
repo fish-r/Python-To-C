@@ -27,4 +27,5 @@ void write_at_start(char *content);
 char *get_c_type(Token *token_array, int token_count, const char *lexeme_to_find);
 int is_token_present(Token **token_array, int token_count, Token *current_token);
 
+void write_indent(int num_indent);
 #endif

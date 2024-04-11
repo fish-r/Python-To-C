@@ -46,6 +46,9 @@ void process_node(TreeNode *current_node, State *current_state,
   /* printf("Current State: %d, Current Label: %s\n", *current_state,
           current_node->label);*/
   /*printf("Current node address %p\n", (void *)current_node);*/
+  if (current_node->token != NULL) {
+    write_indent(current_node->token->num_indentation);
+  }
 
   /* Store identifier token in array */
     if (strcmp(current_node->label, "Identifier") == 0) {
@@ -317,6 +320,21 @@ void write_to_file(char *content) {
     exit(1);
   }
   fprintf(file, "%s", content);
+  fclose(file);
+}
+
+void write_indent(int num_indent) {
+
+  int num_spaces = num_indent;
+  int i;
+  FILE *file = fopen("output.c", "a");
+  if (file == NULL) {
+    printf("Error opening file!\n");
+    exit(1);
+  }
+  for (i = 0; i < num_spaces; ++i) {
+    fprintf(file, " ");
+  }
   fclose(file);
 }
 
