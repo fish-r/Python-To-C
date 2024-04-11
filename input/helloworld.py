@@ -6,10 +6,7 @@ def print_function(x, y):
     this = 5.5
     if x > y:
         print("H")
-    else:
-        print(z)
-    print(a)
-    print(this)
-    print_function(1, 2)
+    elif x < y:
+        print("L")
 
     return 0

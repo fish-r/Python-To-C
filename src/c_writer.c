@@ -17,7 +17,7 @@ void traverse_tree(TreeNode *root, State *prev_state, TreeNode *temp_node,
 
   /* Process the current node */
   set_state(&current_state, current_node);
-  printf("Current Node: %s \n", current_node->label);
+  /*printf("Current Node: %s \n", current_node->label);*/
   process_node(current_node, &current_state, temp_node, token_array,
                token_count);
 
@@ -118,6 +118,8 @@ void process_node(TreeNode *current_node, State *current_state,
   else if (*current_state == WRITE_IF_STMT) {
     if (strcmp(current_node->label, "IfStatement") == 0) {
       write_to_file("if (");
+    } else if (strcmp(current_node->label, "ElifStatement") == 0) {
+      write_to_file("else if (");
     } else if (strcmp(current_node->label, "EOL") == 0) {
       write_to_file(")");
     }
@@ -131,6 +133,8 @@ void process_node(TreeNode *current_node, State *current_state,
       write_to_file(" ");
       write_to_file(current_node->token->lexeme);
       write_to_file(" ");
+    } else if (strcmp(current_node->label, "EOL") == 0) {
+      write_to_file(") {\n");
     }
     return;
   }
@@ -253,6 +257,8 @@ void set_state(State *current_state, TreeNode *current_node) {
   } else if (strcmp(current_node->label, "FunctionDefinition") == 0) {
     *current_state = WRITE_FN_DEF;
   } else if (strcmp(current_node->label, "IfStatement") == 0) {
+    *current_state = WRITE_IF_STMT;
+  } else if (strcmp(current_node->label, "ElifStatement") == 0) {
     *current_state = WRITE_IF_STMT;
   } else if (strcmp(current_node->label, "Condition") == 0) {
     *current_state = WRITE_CONDITION;
