@@ -282,11 +282,18 @@ void process_node(TreeNode *current_node, State *current_state,
 
   else if (*current_state == WRITE_EXPRESSION) {
     if (strcmp(current_node->label, "Identifier") == 0) {
-      
-        write_to_file(current_node->token->c_type);
-        write_to_file(" ");
-        write_to_file(current_node->token->lexeme);
-        write_to_file(" ");
+        if (strcmp(current_node->token->c_type,"char []")==0){
+          write_to_file("char");
+          write_to_file(" ");
+          write_to_file(current_node->token->lexeme);
+          write_to_file("[] ");
+        }
+        else{
+          write_to_file(current_node->token->c_type);
+          write_to_file(" ");
+          write_to_file(current_node->token->lexeme);
+          write_to_file(" ");
+        }
       
     } else if (strcmp(current_node->label, "Operator") == 0) {
       write_to_file(current_node->token->lexeme);
