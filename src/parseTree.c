@@ -97,7 +97,7 @@ TreeNode *buildParseTreeFromTokens(Token **tokens, size_t num_tokens)
 
     printf("\nBuild parse tree start\n");
 
-    printf("num token: %ld\n", num_tokens);
+    /*printf("num token: %ld\n", num_tokens);*/
 
     while (index < num_tokens)
     {
@@ -173,7 +173,7 @@ TreeNode *buildParseTreeFromTokens(Token **tokens, size_t num_tokens)
             index++;
             if (index < num_tokens)
             {
-                printf("index: %ld\n", index);
+                /*printf("index: %ld\n", index);*/
                 currentToken = tokens[index];
             }
             break;
