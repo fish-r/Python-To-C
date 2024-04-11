@@ -196,10 +196,9 @@ void process_node(TreeNode *current_node, State *current_state,
   else if (*current_state == WRITE_LOOP) {
     if (strcmp(current_node->label, "ForStatement") == 0) {
       write_to_file("for (");
+    } else if (strcmp(current_node->label, "WhileStatement") == 0) {
+      write_to_file("while (");
     } else if (strcmp(current_node->label, "Identifier") == 0) {
-      /*      write_to_file(current_node->token->c_type);
-            write_to_file(" ");
-            write_to_file(current_node->token->lexeme);*/
       *temp_node = *current_node;
     } else if (strcmp(current_node->label, "Start") == 0) {
       write_to_file(current_node->token->c_type);
@@ -296,6 +295,8 @@ void set_state(State *current_state, TreeNode *current_node) {
   } else if (strcmp(current_node->label, "ReturnStatement") == 0) {
     *current_state = WRITE_RETURN;
   } else if (strcmp(current_node->label, "ForStatement") == 0) {
+    *current_state = WRITE_LOOP;
+  } else if (strcmp(current_node->label, "WhileStatement") == 0) {
     *current_state = WRITE_LOOP;
   } else if (strcmp(current_node->label, "Expression") == 0) {
     *current_state = WRITE_EXPRESSION;

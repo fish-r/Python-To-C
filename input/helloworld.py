@@ -1,5 +1,4 @@
 def print_function(x, y):
-    variable = "hello"
-    print(45)
-    print("sup")
-    return 1
+    while x < y:
+        print("Hello World!")
+        x += 1
