@@ -24,4 +24,5 @@ void process_node(TreeNode *current_node, State *current_state, TreeNode *temp_n
 void write_to_file( char *content);
 void clear_file(char *filename);
 void write_at_start(char *content);
+void write_indent(int num_indent);
 #endif
