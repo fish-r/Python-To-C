@@ -149,7 +149,7 @@ void process_node(TreeNode *current_node, State *current_state,
       } else if (strcmp(current_node->token->c_type, "float") == 0) {
         write_to_file("\"%f\\n\", ");
       } else if (strcmp(current_node->token->c_type, "str") == 0) {
-        write_to_file("\"%f\\n\", ");
+        write_to_file("\"%s\\n\", ");
       }
       write_to_file(current_node->token->lexeme);
       write_to_file(")");
