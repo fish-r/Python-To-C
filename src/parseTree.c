@@ -97,6 +97,8 @@ TreeNode *buildParseTreeFromTokens(Token **tokens, size_t num_tokens)
 
     printf("\nBuild parse tree start\n");
 
+    printf("num token: %ld\n", num_tokens);
+
     while (index < num_tokens)
     {
         switch (currentToken->type)
@@ -167,7 +169,13 @@ TreeNode *buildParseTreeFromTokens(Token **tokens, size_t num_tokens)
             }
             break;
         case PYTOK_EOF:
+            printf("EOF\n");
             index++;
+            if (index < num_tokens)
+            {
+                printf("index: %ld\n", index);
+                currentToken = tokens[index];
+            }
             break;
         case PYTOK_COMMENT:
             index = parseComments(tokens, currentNode, index);
