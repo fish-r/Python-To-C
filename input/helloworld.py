@@ -1,4 +1,7 @@
 def print_function(x, y):
-    while x < y:
-        print("Hello World!")
-        x += 1
+    print(x)
+    for i in range(1, 5, 2):
+        print(i)
+
+    while y > 0:
+        print(y)

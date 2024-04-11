@@ -35,6 +35,8 @@ void traverse_tree(TreeNode *root, State *prev_state, TreeNode *temp_node,
   }
   /* On recursion exit write closing brackets */
   if (strcmp(current_node->label, "Block") == 0) {
+    write_indent(current_node->token->num_indentation);
+
     write_to_file("}\n");
   }
   /*printf("Exiting node %s \n", current_node->label);*/
@@ -61,6 +63,7 @@ void process_node(TreeNode *current_node, State *current_state,
         token_array[*token_count] = current_token;
         (*token_count)++;
       }
+      /*
       printf("Token count after adding: %d\n", *token_count);
       printf("Added token:\n");
       printf("  Lexeme: %s\n", current_token->lexeme);
@@ -68,7 +71,7 @@ void process_node(TreeNode *current_node, State *current_state,
       printf("  Line Number: %d\n", current_token->line_number);
       printf("  Number of Indentation: %d\n", current_token->num_indentation);
       printf("  C Type: %s\n", current_token->c_type);
-      printf("  String Length: %d\n", current_token->str_length);
+      printf("  String Length: %d\n", current_token->str_length); */
     }
   }
   if (*current_state == WRITE_INCLUDES) {
@@ -193,11 +196,20 @@ void process_node(TreeNode *current_node, State *current_state,
     return;
   }
 
-  else if (*current_state == WRITE_LOOP) {
+  else if (*current_state == WRITE_WHILE_LOOP) {
+    if (strcmp(current_node->label, "WhileStatement") == 0) {
+      write_to_file("while (");
+    } else if (strcmp(current_node->label, "Identifier") == 0) {
+      write_to_file(current_node->token->lexeme);
+    } else if (strcmp(current_node->label, "EOL") == 0) {
+      write_to_file("\n");
+    }
+    return;
+  }
+
+  else if (*current_state == WRITE_FOR_LOOP) {
     if (strcmp(current_node->label, "ForStatement") == 0) {
       write_to_file("for (");
-    } else if (strcmp(current_node->label, "WhileStatement") == 0) {
-      write_to_file("while (");
     } else if (strcmp(current_node->label, "Identifier") == 0) {
       *temp_node = *current_node;
     } else if (strcmp(current_node->label, "Start") == 0) {
@@ -220,7 +232,6 @@ void process_node(TreeNode *current_node, State *current_state,
     } else if (strcmp(current_node->label, "EOL") == 0) {
       write_to_file("\n");
     }
-    return;
   }
 
   else if (*current_state == WRITE_RETURN) {
@@ -243,7 +254,24 @@ void process_node(TreeNode *current_node, State *current_state,
         write_to_file(" ");
         write_to_file(current_node->token->lexeme);
         write_to_file("[] ");
-      } else {
+      } else if (strcmp(current_node->token->c_type, "int []") == 0) {
+        write_to_file("int");
+        write_to_file(" ");
+        write_to_file(current_node->token->lexeme);
+        write_to_file("[] ");
+      } else if (strcmp(current_node->token->c_type, "float []") == 0) {
+        write_to_file("float");
+        write_to_file(" ");
+        write_to_file(current_node->token->lexeme);
+        write_to_file("[] ");
+      } else if (strcmp(current_node->token->c_type, "char* []") == 0) {
+        write_to_file("char*");
+        write_to_file(" ");
+        write_to_file(current_node->token->lexeme);
+        write_to_file("[] ");
+      }
+
+      else {
         write_to_file(current_node->token->c_type);
         write_to_file(" ");
         write_to_file(current_node->token->lexeme);
@@ -295,9 +323,9 @@ void set_state(State *current_state, TreeNode *current_node) {
   } else if (strcmp(current_node->label, "ReturnStatement") == 0) {
     *current_state = WRITE_RETURN;
   } else if (strcmp(current_node->label, "ForStatement") == 0) {
-    *current_state = WRITE_LOOP;
+    *current_state = WRITE_FOR_LOOP;
   } else if (strcmp(current_node->label, "WhileStatement") == 0) {
-    *current_state = WRITE_LOOP;
+    *current_state = WRITE_WHILE_LOOP;
   } else if (strcmp(current_node->label, "Expression") == 0) {
     *current_state = WRITE_EXPRESSION;
   } else if (strcmp(current_node->label, "FunctionCall") == 0) {
