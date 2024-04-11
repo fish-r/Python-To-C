@@ -160,15 +160,15 @@ void process_node(TreeNode *current_node, State *current_state,
     {
       if (strcmp(current_node->token->c_type, "int") == 0)
       {
-        write_to_file("\"%d\\n\", ");
+        write_to_file("\"%d\", ");
       }
       else if (strcmp(current_node->token->c_type, "float") == 0)
       {
-        write_to_file("\"%f\\n\", ");
+        write_to_file("\"%f\", ");
       }
-      else if (strcmp(current_node->token->c_type, "str") == 0)
+      else if ((strcmp(current_node->token->c_type, "char") == 0) || (strcmp(current_node->token->c_type, "char []") == 0))
       {
-        write_to_file("\"%f\\n\", ");
+        write_to_file("\"%s\", ");
       }
       write_to_file(current_node->token->lexeme);
       write_to_file(")");
@@ -193,7 +193,7 @@ void process_node(TreeNode *current_node, State *current_state,
       {
         write_to_file("\"%f\", ");
       }
-      else if (strcmp(c_type, "str") == 0)
+      else if ((strcmp(c_type, "char") == 0) || (strcmp(c_type,"char []")))
       {
         write_to_file("\"%s\", ");
       }
@@ -283,21 +283,12 @@ void process_node(TreeNode *current_node, State *current_state,
 
   else if (*current_state == WRITE_EXPRESSION) {
     if (strcmp(current_node->label, "Identifier") == 0) {
-      if (strcmp(current_node->token->c_type,"str")==0){
-        printf("\n\n%d\n\n",current_node->token->str_length);
-        write_to_file("char");
-        write_to_file(" ");
-        write_to_file(current_node->token->lexeme);
-        write_to_file("[");
-        write_to_file("]");
-        write_to_file(" ");
-      }
-      else{
+      
         write_to_file(current_node->token->c_type);
         write_to_file(" ");
         write_to_file(current_node->token->lexeme);
         write_to_file(" ");
-      }
+      
     } else if (strcmp(current_node->label, "Operator") == 0) {
       write_to_file(current_node->token->lexeme);
       write_to_file(" ");

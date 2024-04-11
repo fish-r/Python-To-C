@@ -618,7 +618,7 @@ size_t parseExpression(Token **tokens, TreeNode *currentNode, size_t index)
             tokens[index]->c_type = "char";
             break;
         case PYTOK_STRING:
-            tokens[index]->c_type = "str";
+            tokens[index]->c_type = "char []";
             break;
         case PYTOK_INT:
             tokens[index]->c_type = "int";
