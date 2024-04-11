@@ -74,7 +74,6 @@ void process_node(TreeNode *current_node, State *current_state,
         token_array[*token_count] = current_token;
         (*token_count)++;
       }
-      /*
       printf("Token count after adding: %d\n", *token_count);
       printf("Added token:\n");
       printf("  Lexeme: %s\n", current_token->lexeme);
@@ -83,7 +82,7 @@ void process_node(TreeNode *current_node, State *current_state,
       printf("  Number of Indentation: %d\n", current_token->num_indentation);
       printf("  C Type: %s\n", current_token->c_type);
       printf("  String Length: %d\n", current_token->str_length);
-      */
+     
     }
   }
   if (*current_state == WRITE_INCLUDES)
@@ -166,7 +165,7 @@ void process_node(TreeNode *current_node, State *current_state,
       {
         write_to_file("\"%f\", ");
       }
-      else if ((strcmp(current_node->token->c_type, "char") == 0) || (strcmp(current_node->token->c_type, "char []") == 0))
+      else if ((strcmp(current_node->token->c_type, "char") == 0) || (strcmp(current_node->token->c_type, "char[]") == 0))
       {
         write_to_file("\"%s\", ");
       }
@@ -193,7 +192,7 @@ void process_node(TreeNode *current_node, State *current_state,
       {
         write_to_file("\"%f\", ");
       }
-      else if ((strcmp(c_type, "char") == 0) || (strcmp(c_type,"char []")))
+      else if ((strcmp(c_type, "char") == 0) || (strcmp(c_type,"char[]")))
       {
         write_to_file("\"%s\", ");
       }
@@ -268,8 +267,8 @@ void process_node(TreeNode *current_node, State *current_state,
     if (strcmp(current_node->label, "ReturnStatement") == 0)
     {
       write_to_file("return ");
-    }
-    else if (strcmp(current_node->label, "Literal") == 0)
+    } 
+    else if ((strcmp(current_node->label, "Literal") == 0) || (strcmp(current_node->label, "Identifier") == 0))
     {
       write_to_file(current_node->token->lexeme);
     }
