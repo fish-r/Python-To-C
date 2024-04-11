@@ -13,6 +13,7 @@ typedef enum {
   WRITE_RETURN,
   WRITE_EXPRESSION,
   WRITE_LOOP,
+  WRITE_FN_CALL,
   STATE_END
 } State;
 
