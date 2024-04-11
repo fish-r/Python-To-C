@@ -65,7 +65,8 @@ char *findReturnType(Token **tokens, size_t index)
         {
             return "void";
         }
-        if (tokens[index]->type == PYTOK_RETURN){
+        if (tokens[index]->type == PYTOK_RETURN)
+        {
             return tokens[index + 1]->c_type;
         }
         index++;
@@ -73,10 +74,13 @@ char *findReturnType(Token **tokens, size_t index)
     return tokens[index + 1]->c_type;
 }
 
-int findNumParams(Token **tokens, size_t index){
+int findNumParams(Token **tokens, size_t index)
+{
     int count = 0;
-    while(tokens[index]->type != PYTOK_RIGHTPARENTHESIS){
-        if (tokens[index]->type == PYTOK_INT){
+    while (tokens[index]->type != PYTOK_RIGHTPARENTHESIS)
+    {
+        if (tokens[index]->type == PYTOK_INT)
+        {
             count++;
         }
         index++;
@@ -92,6 +96,8 @@ TreeNode *buildParseTreeFromTokens(Token **tokens, size_t num_tokens)
     Token *currentToken = tokens[index];
 
     printf("\nBuild parse tree start\n");
+
+    printf("num token: %ld\n", num_tokens);
 
     while (index < num_tokens)
     {
@@ -163,7 +169,13 @@ TreeNode *buildParseTreeFromTokens(Token **tokens, size_t num_tokens)
             }
             break;
         case PYTOK_EOF:
+            printf("EOF\n");
             index++;
+            if (index < num_tokens)
+            {
+                printf("index: %ld\n", index);
+                currentToken = tokens[index];
+            }
             break;
         case PYTOK_COMMENT:
             index = parseComments(tokens, currentNode, index);
@@ -202,18 +214,18 @@ size_t parseComments(Token **tokens, TreeNode *currentNode, size_t index)
     /* add comment as child */
     addChild(currentNode, createNode("Comment", tokens[index]));
     index++;
-    
+
     /* check for EOL */
     if (tokens[index]->type == PYTOK_EOL)
     {
         addChild(currentNode, createNode("EOL", NULL));
         index++;
         /* remove all subsequent eol */
-        while(tokens[index]->type == PYTOK_EOL){
+        while (tokens[index]->type == PYTOK_EOL)
+        {
             index++;
         }
     }
-
 
     return index;
 }
@@ -257,14 +269,14 @@ size_t parseForStatement(Token **tokens, TreeNode *currentNode, size_t index)
         printf("num param: %d\n", numParams);
 
         /* check for number of params */
-        if (numParams == 1){
+        if (numParams == 1)
+        {
             addChild(currentNode, createNode("Start", create_token(PYTOK_INT, "0", 0, 0, "int", 0)));
 
             addChild(currentNode, createNode("Stop", tokens[index]));
             index++;
 
             addChild(currentNode, createNode("Step", create_token(PYTOK_INT, "1", 0, 0, "int", 0)));
-
         }
         else if (numParams == 2)
         {
@@ -279,7 +291,8 @@ size_t parseForStatement(Token **tokens, TreeNode *currentNode, size_t index)
 
             addChild(currentNode, createNode("Step", create_token(PYTOK_INT, "1", 0, 0, "int", 0)));
         }
-        else{
+        else
+        {
             /* num params = 3 */
             addChild(currentNode, createNode("Start", tokens[index]));
             index++;
@@ -296,22 +309,7 @@ size_t parseForStatement(Token **tokens, TreeNode *currentNode, size_t index)
             addChild(currentNode, createNode("Step", tokens[index]));
             index++;
         }
-        
 
-        /*do
-        {
-
-            if (peekToken(tokens[index]) == PYTOK_COMMA)
-            {
- 
-                index++;
-            }
-
-            addChild(currentNode, createNode("Term", tokens[index]));
-            index++;
-        } while (peekToken(tokens[index]) == PYTOK_COMMA);*/
-
-        /* skip right paran and parse block */
         index = parseBlock(tokens, forNode, index + 1);
         break;
     case PYTOK_STRING:
@@ -325,7 +323,7 @@ size_t parseForStatement(Token **tokens, TreeNode *currentNode, size_t index)
         break;
     case PYTOK_CHAR:
         /* add string as child */
-        addChild(currentNode, createNode("Char", NULL));
+        addChild(currentNode, createNode("Char", tokens[index]));
         index++;
         currentNode = currentNode->children[currentNode->num_children - 1];
 
@@ -342,10 +340,31 @@ size_t parseForStatement(Token **tokens, TreeNode *currentNode, size_t index)
         index = parseBlock(tokens, forNode, index);
         break;
     case PYTOK_LIST_FLOAT:
+        /* add list float as child */
+        addChild(currentNode, createNode("List", tokens[index]));
+        index++;
+        currentNode = currentNode->children[currentNode->num_children - 1];
+
+        /* parse block */
+        index = parseBlock(tokens, forNode, index);
         break;
     case PYTOK_LIST_INT:
+        /* add list as child */
+        addChild(currentNode, createNode("List", tokens[index]));
+        index++;
+        currentNode = currentNode->children[currentNode->num_children - 1];
+
+        /* parse block */
+        index = parseBlock(tokens, forNode, index);
         break;
     case PYTOK_LIST_STR:
+        /* add list as child */
+        addChild(currentNode, createNode("List", tokens[index]));
+        index++;
+        currentNode = currentNode->children[currentNode->num_children - 1];
+
+        /* parse block */
+        index = parseBlock(tokens, forNode, index);
         break;
     default:
         break;
@@ -663,6 +682,18 @@ size_t parseExpression(Token **tokens, TreeNode *currentNode, size_t index)
             addChild(currentNode, createNode("Literal", tokens[index]));
             index++;
             break;
+        case PYTOK_LIST_FLOAT:
+            addChild(currentNode, createNode("Literal", tokens[index]));
+            index++;
+            break;
+        case PYTOK_LIST_INT:
+            addChild(currentNode, createNode("Literal", tokens[index]));
+            index++;
+            break;
+        case PYTOK_LIST_STR:
+            addChild(currentNode, createNode("Literal", tokens[index]));
+            index++;
+            break;
         default:
             index++;
             break;
@@ -749,7 +780,7 @@ size_t parseFunctionCall(Token **tokens, TreeNode *currentNode, size_t index)
 size_t parseBlock(Token **tokens, TreeNode *currentNode, size_t index)
 {
     /* Block -> : <statements> */
-    int indent;
+    int indent, parentIndent;
 
     /* skip colon keyword */
     index++;
@@ -770,9 +801,12 @@ size_t parseBlock(Token **tokens, TreeNode *currentNode, size_t index)
     /* set current indent level */
     indent = tokens[index]->num_indentation;
 
+    /* get parent indent */
+    parentIndent = currentNode->token->num_indentation;
     /* add block as child */
-    addChild(currentNode, createNode("Block", NULL));
+    addChild(currentNode, createNode("Block", create_token(UNKNOWN, "Block", 0, parentIndent, "Block", 0)));
     currentNode = currentNode->children[currentNode->num_children - 1];
+
     while (tokens[index]->num_indentation == indent || tokens[index]->type == PYTOK_EOL)
     {
         /* peek next token */
