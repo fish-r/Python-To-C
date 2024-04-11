@@ -1,16 +1,15 @@
 #include "../include/c_writer.h"
-#include <malloc/_malloc_type.h>
+#include <malloc.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 /* Define the maximum number of nodes in the tree */
 #define MAX_NODES 100
-
 /* Define the states of the FSM */
 
 /* Function to traverse the tree using FSM */
-void traverse_tree(TreeNode *root, State *prev_state, TreeNode *temp_node) {
+void traverse_tree(TreeNode *root, State *prev_state, TreeNode *temp_node, Token **token_array, int *token_count) {
   /* Create a stack to store the nodes */
   TreeNode *current_node = root;
   State current_state = *prev_state;
@@ -19,7 +18,7 @@ void traverse_tree(TreeNode *root, State *prev_state, TreeNode *temp_node) {
   /* Process the current node */
   set_state(&current_state, current_node);
   printf("Current Node: %s \n", current_node->label);
-  process_node(current_node, &current_state, temp_node);
+  process_node(current_node, &current_state, temp_node, token_array, token_count);
 
   if (root->num_children == 0) {
     /*printf("Done with node %s \n", current_node->label);*/
@@ -33,7 +32,7 @@ void traverse_tree(TreeNode *root, State *prev_state, TreeNode *temp_node) {
         strcmp(current_node->children[i]->label, "Parameter") == 0) {
       write_to_file(", ");
     }
-    traverse_tree(current_node->children[i], &current_state, temp_node);
+    traverse_tree(current_node->children[i], &current_state, temp_node, token_array, token_count);
   }
   /* On recursion exit write closing brackets */
   if (strcmp(current_node->label, "Block") == 0) {
@@ -43,11 +42,36 @@ void traverse_tree(TreeNode *root, State *prev_state, TreeNode *temp_node) {
 }
 
 void process_node(TreeNode *current_node, State *current_state,
-                  TreeNode *temp_node) {
+                  TreeNode *temp_node, Token **token_array, int *token_count) {
   /* printf("Current State: %d, Current Label: %s\n", *current_state,
           current_node->label);*/
   /*printf("Current node address %p\n", (void *)current_node);*/
 
+  /* Store identifier token in array */
+    if (strcmp(current_node->label, "Identifier") == 0) {
+        Token *current_token = current_node->token;
+        if (!is_token_present(token_array, *token_count, current_token)){
+          if (current_token->c_type != NULL) {
+            token_array[*token_count] = current_token; 
+            (*token_count)++;
+          }
+          else{
+            current_token->c_type="int";
+            token_array[*token_count] = current_token; 
+            (*token_count)++;
+        }
+        /*
+        printf("Token count after adding: %d\n", *token_count);
+        printf("Added token:\n");
+        printf("  Lexeme: %s\n", current_token->lexeme);
+        printf("  Type: %d\n", current_token->type);
+        printf("  Line Number: %d\n", current_token->line_number);
+        printf("  Number of Indentation: %d\n", current_token->num_indentation);
+        printf("  C Type: %s\n", current_token->c_type);
+        printf("  String Length: %d\n", current_token->str_length);
+        */
+      }
+  }
   if (*current_state == WRITE_INCLUDES) {
     if (strcmp(current_node->label, "Program") == 0) {
       write_to_file("#include <stdio.h>\n#include <stdlib.h>\n\n");
@@ -106,13 +130,27 @@ void process_node(TreeNode *current_node, State *current_state,
         write_to_file("\"%d\\n\", ");
       } else if (strcmp(current_node->token->c_type, "float") == 0) {
         write_to_file("\"%f\\n\", ");
-      } else if (strcmp(current_node->token->c_type, "string") == 0) {
+      } else if (strcmp(current_node->token->c_type, "str") == 0) {
         write_to_file("\"%f\\n\", ");
       }
       write_to_file(current_node->token->lexeme);
       write_to_file(")");
     } else if (strcmp(current_node->label, "Identifier") == 0) {
-      /*write_to_file(current_node->token->c_type);*/
+      char *c_type;
+      int i;
+      for (i = 0; i < *token_count; i++) {
+        if (strcmp(token_array[i]->lexeme, current_node->token->lexeme) == 0) {
+            c_type= token_array[i]->c_type;
+            break;
+        }
+      }
+      if (strcmp(c_type, "int") == 0) {
+        write_to_file("\"%d\", ");
+      } else if (strcmp(c_type, "float") == 0) {
+          write_to_file("\"%f\", ");
+      } else if (strcmp(c_type, "str") == 0) {
+          write_to_file("\"%s\", "); 
+      }
       write_to_file(current_node->token->lexeme);
       write_to_file(")");
     } else if (strcmp(current_node->label, "EOL") == 0) {
@@ -225,10 +263,12 @@ void set_state(State *current_state, TreeNode *current_node) {
 void write_c_file(TreeNode *root) {
   State initial_state = STATE_INIT;
   TreeNode *temp_node = (TreeNode *)malloc(sizeof(TreeNode));
+  Token **token_array = (Token **) malloc(sizeof(Token));
+  int token_count=0;   
 
   clear_file("output.c");
 
-  traverse_tree(root, &initial_state, temp_node);
+  traverse_tree(root, &initial_state, temp_node, token_array, &token_count);
 }
 
 /* helper function to clear output.c */
@@ -278,4 +318,25 @@ void write_to_file(char *content) {
   }
   fprintf(file, "%s", content);
   fclose(file);
+}
+
+char *get_c_type(Token *token_array, int token_count, const char *lexeme_to_find) {
+    int i;
+    for (i = 0; i < token_count; i++) {
+      
+        if (strcmp(token_array[i].lexeme, lexeme_to_find) == 0) {
+            return token_array[i].c_type;
+        }
+    }
+    return NULL;
+}
+
+int is_token_present(Token **token_array, int token_count, Token *current_token) {
+    int i;
+    for (i = 0; i < token_count; i++) {
+        if (strcmp(token_array[i]->lexeme, current_token->lexeme) == 0) {
+            return 1;
+        }
+    }
+    return 0;
 }
