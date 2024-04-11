@@ -12,14 +12,11 @@ void traverse_tree(TreeNode *root, State *prev_state, TreeNode *temp_node,
                    Token **token_array, int *token_count) {
   /* Create a stack to store the nodes */
   TreeNode *current_node = root;
-  State current_state = *prev_state;
   int i = 0;
-
   /* Process the current node */
-  set_state(&current_state, current_node);
+  set_state(prev_state, current_node);
   /*printf("Current Node: %s \n", current_node->label);*/
-  process_node(current_node, &current_state, temp_node, token_array,
-               token_count);
+  process_node(current_node, prev_state, temp_node, token_array, token_count);
 
   if (root->num_children == 0) {
     /*printf("Done with node %s \n", current_node->label);*/
@@ -33,8 +30,8 @@ void traverse_tree(TreeNode *root, State *prev_state, TreeNode *temp_node,
         strcmp(current_node->children[i]->label, "Parameter") == 0) {
       write_to_file(", ");
     }
-    traverse_tree(current_node->children[i], &current_state, temp_node,
-                  token_array, token_count);
+    traverse_tree(current_node->children[i], prev_state, temp_node, token_array,
+                  token_count);
   }
   /* On recursion exit write closing brackets */
   if (strcmp(current_node->label, "Block") == 0) {
@@ -45,8 +42,8 @@ void traverse_tree(TreeNode *root, State *prev_state, TreeNode *temp_node,
 
 void process_node(TreeNode *current_node, State *current_state,
                   TreeNode *temp_node, Token **token_array, int *token_count) {
-  /* printf("Current State: %d, Current Label: %s\n", *current_state,
-          current_node->label);*/
+  printf("Current State: %d, Current Label: %s\n", *current_state,
+         current_node->label);
   /*printf("Current node address %p\n", (void *)current_node);*/
   if (current_node->token != NULL) {
     write_indent(current_node->token->num_indentation);
@@ -86,7 +83,7 @@ void process_node(TreeNode *current_node, State *current_state,
     write_to_file("{\n");
   }
 
-  if (*current_state == WRITE_FN_DEF) {
+  else if (*current_state == WRITE_FN_DEF) {
     if (strcmp(current_node->label, "Identifier") == 0) {
       write_to_file(current_node->token->c_type);
       write_to_file(" ");
@@ -247,14 +244,25 @@ void process_node(TreeNode *current_node, State *current_state,
     return;
   }
 
+  else if (*current_state == WRITE_COMMENT) {
+    if (strcmp(current_node->label, "Comment") == 0) {
+      write_to_file("/* ");
+      write_to_file(current_node->token->lexeme);
+      write_to_file(" */");
+    } else if (strcmp(current_node->label, "EOL") == 0) {
+      write_to_file("\n");
+    }
+    return;
+  }
+
   return;
 }
 
 void set_state(State *current_state, TreeNode *current_node) {
-  /*printf("Current State: %d\n", *current_state);*/
   if (strcmp(current_node->label, "Program") == 0) {
     *current_state = WRITE_INCLUDES;
   } else if (strcmp(current_node->label, "FunctionDefinition") == 0) {
+    printf("Setting state to write function definition\n");
     *current_state = WRITE_FN_DEF;
   } else if (strcmp(current_node->label, "IfStatement") == 0) {
     *current_state = WRITE_IF_STMT;
@@ -274,11 +282,10 @@ void set_state(State *current_state, TreeNode *current_node) {
     *current_state = WRITE_EXPRESSION;
   } else if (strcmp(current_node->label, "FunctionCall") == 0) {
     *current_state = WRITE_FN_CALL;
+  } else if (strcmp(current_node->label, "Comment") == 0) {
+    *current_state = WRITE_COMMENT;
   }
-
-  else {
-    return;
-  }
+  return;
 }
 
 void write_c_file(TreeNode *root) {
