@@ -466,6 +466,9 @@ Token **lex(char *source_code)
 
     /*Check if the character is a space and current indentation is 0 (start of line) */
     /* ASSUME first line has 0 indentation*/
+    if (source_code[current_position - 1] != '\n'){
+      current_indentation=0;
+    }
     if (source_code[current_position] == ' ' &&
         current_indentation == 0 &&
         source_code[current_position - 1] != '\n' &&
