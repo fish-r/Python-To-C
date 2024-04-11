@@ -41,6 +41,8 @@ void traverse_tree(TreeNode *root, State *prev_state, TreeNode *temp_node,
   /* On recursion exit write closing brackets */
   if (strcmp(current_node->label, "Block") == 0)
   {
+    write_indent(current_node->token->num_indentation);
+
     write_to_file("}\n");
   }
   /*printf("Exiting node %s \n", current_node->label);*/
