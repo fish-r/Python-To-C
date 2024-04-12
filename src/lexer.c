@@ -348,8 +348,7 @@ Token **lex(char *source_code)
         longest_match = candidate_match_length;
         /* convert python string of length 1 to char with single quote */
         /* else always double quote*/
-        if (token_type==PYTOK_STRING){
-          if (longest_match == 3) {
+        if (token_type==PYTOK_CHAR){
               char *modified_lexeme = malloc(3 * sizeof(char)); 
               modified_lexeme[0] = '\''; 
               modified_lexeme[1] = candidate_lexeme[1]; 
@@ -357,7 +356,8 @@ Token **lex(char *source_code)
               modified_lexeme[3] = '\0'; 
               strncpy(candidate_lexeme, modified_lexeme,3);
               free(modified_lexeme); 
-          }else {char *modified_lexeme = malloc((longest_match + 3) * sizeof(char));
+        if (token_type==PYTOK_STRING)
+        {     char *modified_lexeme = malloc((longest_match + 3) * sizeof(char));
               modified_lexeme[0] = '\"'; 
               strncpy(modified_lexeme + 1, candidate_lexeme + 1, longest_match - 2); 
               modified_lexeme[longest_match - 1] = '\"'; 
