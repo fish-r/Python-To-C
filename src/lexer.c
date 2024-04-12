@@ -427,6 +427,7 @@ Token **lex(char *source_code)
   size_t candidate_match_length;
   Token **token_stream = NULL;
   size_t token_count = 0;
+  Token *final_token;
 
   size_t source_code_length = strlen(source_code);
   size_t current_position = 0;
@@ -606,8 +607,11 @@ Token **lex(char *source_code)
       ++current_position;
     }
   }
-  token_stream[token_count] = create_token(PYTOK_EOL, "EOL", 0, 0, "EOL", str_length);
-  token_stream[token_count + 1] = create_token(PYTOK_EOF, "EOF", 0, 0, "EOF", str_length);
+  final_token = create_token(PYTOK_EOL, "EOL", 0, 0, "EOL", 0);
+  token_stream = (Token **)realloc(token_stream, (token_count + 1) * sizeof(Token *));
+  token_stream[token_count] = final_token;
+  token_count++;
+  token_stream[token_count] = create_token(PYTOK_EOF, "EOF", 0, 0, "EOF", str_length);
   return token_stream;
   /* ignore below cos token_stream is needed
   for (i = 0; i < token_count; i++)
