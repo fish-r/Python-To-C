@@ -1,13 +1,8 @@
 #ifndef UTILS_H
 # define UTILS_H
 
-typedef enum {
-    NO_ERROR,
-    FILE_NOT_FOUND,
-    MEMORY_ALLOCATION_FAILED,
-    INVALID_INPUT
-} ErrorCode;
-
+int is_digit(char c);
+int is_whitespace(char c);
 char *read_file(const char *filename);
 void throwError(const char *format, ...);
 void checkAndThrowError(const char *matched_lexeme, const char **unImplementedTokenList, 

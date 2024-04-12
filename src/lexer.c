@@ -1,5 +1,6 @@
 #include "../include/lexer.h"
 #include "../include/utils.h"
+#include "../include/literal_fsm.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -125,16 +126,6 @@ int is_alphanumeric(char c)
   }
 }
 
-int is_digit(char c)
-{
-  return c >= '0' && c <= '9';
-}
-
-int is_whitespace(char c)
-{
-  return c == ' ' || c == '\t' || c == '\n' || c == '\r';
-}
-
 PythonTokenType is_python_identifier(const char *lexeme)
 {
   int i;
@@ -179,87 +170,6 @@ PythonTokenType is_python_identifier(const char *lexeme)
   return (state == WORD) ? PYTOK_IDENTIFIER : UNKNOWN;
 }
 
-PythonTokenType is_python_string(const char *lexeme, size_t *matched_length)
-{
-  char quote = *lexeme;
-  size_t length = 0;
-  /* check if it starts with ' or " , then stop when it encounters the same quote*/
-  if (quote == '\'' || quote == '"')
-  {
-    const char *ptr = lexeme + 1;
-    length++;
-    while (*ptr != quote && *ptr != '\0')
-    {
-      ptr++;
-      length++;
-    }
-    if (*ptr == quote)
-    {
-      length++;
-      *matched_length = length;
-      if (*matched_length <= 3)
-      {
-        return PYTOK_CHAR;
-      }
-      return PYTOK_STRING;
-    }
-  }
-  *matched_length = 0;
-  return UNKNOWN;
-}
-
-PythonTokenType is_python_numeric(const char *lexeme, size_t *matched_length)
-{
-  size_t length = 0;
-  int decimal_point_count = 0;
-  int has_digits = 0;
-
-  /* Check if the first character is a digit or a minus sign */
-  if (*lexeme == '-' || is_digit(*lexeme))
-  {
-    const char *ptr = lexeme;
-    if (*ptr == '-')
-    {
-      ptr++;
-      length++;
-    }
-    while (is_digit(*ptr) || *ptr == '.')
-    {
-      if (*ptr == '.')
-      {
-        decimal_point_count++;
-        if (decimal_point_count > 1)
-        {
-          *matched_length = 0;
-          return UNKNOWN;
-        }
-      }
-      else
-      {
-        has_digits = 1;
-      }
-      ptr++;
-      length++;
-    }
-
-    if (length > 0)
-    {
-      *matched_length = length;
-      if (decimal_point_count == 0)
-      {
-        return (has_digits ? PYTOK_INT : UNKNOWN);
-      }
-      else
-      {
-        return PYTOK_FLOAT;
-      }
-    }
-  }
-
-  *matched_length = 0;
-  return UNKNOWN;
-}
-
 PythonTokenType is_python_boolean(const char *lexeme)
 {
   if (strcmp(lexeme, "True") == 0 || strcmp(lexeme, "False") == 0)
@@ -275,94 +185,6 @@ PythonTokenType is_python_none(const char *lexeme)
   {
     return PYTOK_NONE;
   }
-  return UNKNOWN;
-}
-
-PythonTokenType is_python_list(const char *lexeme, size_t *matched_length, int *list_length)
-{
-  size_t length = 0;
-  int in_quotes = 0;
-  int is_int_list = 1;
-  int is_float_list = 1;
-
-  *list_length = 0;
-
-  while (is_whitespace(*lexeme))
-  {
-    lexeme++;
-    length++;
-  }
-
-  if (*lexeme == '[')
-  {
-    /* empty list case */
-    if (*(lexeme + 1) == ']')
-    {
-      *matched_length = 2;
-      return PYTOK_LIST_INT;
-    }
-
-    lexeme++;
-    length++;
-
-    while (*lexeme != '\0')
-    {
-
-      if (*lexeme == '"')
-      {
-        in_quotes = !in_quotes;
-      }
-
-      if (!in_quotes && is_whitespace(*lexeme))
-      {
-        lexeme++;
-        length++;
-        continue;
-      }
-
-      if (*lexeme == ']' && !in_quotes)
-      {
-        length++;
-        *matched_length = length;
-        (*list_length)++; /* account for last element */
-
-        if (is_int_list)
-        {
-          return PYTOK_LIST_INT;
-        }
-        else if (is_float_list)
-        {
-          return PYTOK_LIST_FLOAT;
-        }
-        else
-        {
-          return PYTOK_LIST_STR;
-        }
-      }
-      /* add list length every comma*/
-      if (*lexeme == ',' && !in_quotes)
-      {
-        (*list_length)++;
-      }
-
-      if (!in_quotes && *lexeme != ',' && *lexeme != '[' && *lexeme != ']')
-      {
-        if (*lexeme != '-' && !is_digit(*lexeme))
-        {
-          is_int_list = 0;
-        }
-        if (!is_digit(*lexeme) && *lexeme != '.' && *lexeme != '-')
-        {
-          is_float_list = 0;
-        }
-      }
-
-      lexeme++;
-      length++;
-    }
-  }
-
-  *matched_length = 0;
   return UNKNOWN;
 }
 
@@ -524,6 +346,24 @@ Token **lex(char *source_code)
       {
         token_type = candidate_token_type;
         longest_match = candidate_match_length;
+        /* convert python string of length 1 to char with single quote */
+        /* else always double quote*/
+        if (longest_match == 3) {
+            char *modified_lexeme = malloc(3 * sizeof(char)); 
+            modified_lexeme[0] = '\''; 
+            modified_lexeme[1] = candidate_lexeme[1]; 
+            modified_lexeme[2] = '\''; 
+            modified_lexeme[3] = '\0'; 
+            strncpy(candidate_lexeme, modified_lexeme,3);
+            free(modified_lexeme); 
+        }else {char *modified_lexeme = malloc((longest_match + 3) * sizeof(char));
+            modified_lexeme[0] = '\"'; 
+            strncpy(modified_lexeme + 1, candidate_lexeme + 1, longest_match - 2); 
+            modified_lexeme[longest_match - 1] = '\"'; 
+            modified_lexeme[longest_match] = '\0'; 
+            strcpy(candidate_lexeme, modified_lexeme);
+            free(modified_lexeme);
+        }
         strncpy(matched_lexeme, candidate_lexeme, candidate_match_length);
       }
       else if ((candidate_token_type = is_python_list(candidate_lexeme, &candidate_match_length, &list_length)) != UNKNOWN)
