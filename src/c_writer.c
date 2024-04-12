@@ -9,7 +9,7 @@
 
 /* Function to traverse the tree using FSM */
 void traverse_tree(TreeNode *root, State *prev_state, TreeNode *temp_node,
-                   Token **token_array, int *token_count) {
+                   Token ***token_array, int *token_count) {
 
   int i = 0;
   /* Process the current node */
@@ -40,7 +40,7 @@ void traverse_tree(TreeNode *root, State *prev_state, TreeNode *temp_node,
 }
 
 void process_node(TreeNode *current_node, State *current_state,
-                  TreeNode *temp_node, Token **token_array, int *token_count) {
+                  TreeNode *temp_node, Token ***token_array, int *token_count) {
   char temp_str[100];
   printf("Current State: %d, Current Label: %s\n", *current_state,
          current_node->label);
@@ -52,13 +52,13 @@ void process_node(TreeNode *current_node, State *current_state,
   /* Store identifier token in array */
   if (strcmp(current_node->label, "Identifier") == 0) {
     Token *current_token = current_node->token;
-    if (!is_token_present(token_array, *token_count, current_token)) {
+    if (!is_token_present(*token_array, *token_count, current_token)) {
       if (current_token->c_type != NULL) {
-        token_array[*token_count] = current_token;
+        (*token_array)[*token_count] = current_token;
         (*token_count)++;
       } else {
         current_token->c_type = "int";
-        token_array[*token_count] = current_token;
+        (*token_array)[*token_count] = current_token;
         (*token_count)++;
       }
       /*
@@ -81,6 +81,7 @@ void process_node(TreeNode *current_node, State *current_state,
   }
 
   if (strcmp(current_node->label, "Block") == 0) {
+    *token_count = 0;
     write_to_file("{\n");
   }
 
@@ -180,8 +181,8 @@ void process_node(TreeNode *current_node, State *current_state,
       char *c_type;
       int i;
       for (i = 0; i < *token_count; i++) {
-        if (strcmp(token_array[i]->lexeme, current_node->token->lexeme) == 0) {
-          c_type = token_array[i]->c_type;
+        if (strcmp((*token_array)[i]->lexeme, current_node->token->lexeme) == 0) {
+          c_type = (*token_array)[i]->c_type;
           break;
         }
       }
@@ -386,7 +387,7 @@ void write_c_file(TreeNode *root) {
   clear_file("output.c");
   clear_file("output.h");
 
-  traverse_tree(root, &initial_state, temp_node, token_array, &token_count);
+  traverse_tree(root, &initial_state, temp_node, &token_array, &token_count);
 }
 
 /* helper function to clear output.c */

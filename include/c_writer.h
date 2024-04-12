@@ -21,10 +21,10 @@ typedef enum {
   STATE_END
 } State;
 
-void traverse_tree(TreeNode *root, State *prev_state, TreeNode *temp_node, Token **token_array, int *token_count);
+void traverse_tree(TreeNode *root, State *prev_state, TreeNode *temp_node, Token ***token_array, int *token_count);
 void set_state(State * current_state, TreeNode *current_node);
 void write_c_file(TreeNode *root);
-void process_node(TreeNode *current_node, State *current_state, TreeNode *temp_node, Token **token_array, int *token_count);
+void process_node(TreeNode *current_node, State *current_state, TreeNode *temp_node, Token ***token_array, int *token_count);
 /* Utils */
 void write_to_file( char *content);
 void write_to_header_file( char *content);
