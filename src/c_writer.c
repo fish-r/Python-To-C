@@ -10,40 +10,37 @@
 /* Function to traverse the tree using FSM */
 void traverse_tree(TreeNode *root, State *prev_state, TreeNode *temp_node,
                    Token **token_array, int *token_count) {
-  /* Create a stack to store the nodes */
-  TreeNode *current_node = root;
+
   int i = 0;
   /* Process the current node */
-  set_state(prev_state, current_node);
-  /*printf("Current Node: %s \n", current_node->label);*/
-  process_node(current_node, prev_state, temp_node, token_array, token_count);
+  set_state(prev_state, root);
+
+  process_node(root, prev_state, temp_node, token_array, token_count);
 
   if (root->num_children == 0) {
-    /*printf("Done with node %s \n", current_node->label);*/
     return;
   }
 
-  for (i = 0; i < current_node->num_children; i++) {
+  for (i = 0; i < root->num_children; i++) {
     /* implement lookahead */
-    if (i > 0 &&
-        strcmp(current_node->children[i - 1]->label, "Parameter") == 0 &&
-        strcmp(current_node->children[i]->label, "Parameter") == 0) {
+    if (i > 0 && strcmp(root->children[i - 1]->label, "Parameter") == 0 &&
+        strcmp(root->children[i]->label, "Parameter") == 0) {
       write_to_file(", ");
     }
-    traverse_tree(current_node->children[i], prev_state, temp_node, token_array,
+    traverse_tree(root->children[i], prev_state, temp_node, token_array,
                   token_count);
   }
   /* On recursion exit write closing brackets */
-  if (strcmp(current_node->label, "Block") == 0) {
-    write_indent(current_node->token->num_indentation);
+  if (strcmp(root->label, "Block") == 0) {
+    write_indent(root->token->num_indentation);
 
     write_to_file("}\n");
   }
-  /*printf("Exiting node %s \n", current_node->label);*/
 }
 
 void process_node(TreeNode *current_node, State *current_state,
                   TreeNode *temp_node, Token **token_array, int *token_count) {
+  char temp_str[100];
   printf("Current State: %d, Current Label: %s\n", *current_state,
          current_node->label);
   /*printf("Current node address %p\n", (void *)current_node);*/
@@ -86,7 +83,7 @@ void process_node(TreeNode *current_node, State *current_state,
 
   if (*current_state == WRITE_FN_DEF) {
     if (strcmp(current_node->label, "Identifier") == 0) {
-      printf("return type %s\n", current_node->token->c_type);
+
       if (strcmp(current_node->token->c_type, "char []") == 0) {
         write_to_file("char* ");
         write_to_file(" ");
@@ -140,7 +137,7 @@ void process_node(TreeNode *current_node, State *current_state,
       write_to_file(current_node->token->lexeme);
       write_to_file(" ");
     } else if (strcmp(current_node->label, "EOL") == 0) {
-      write_to_file(") {\n");
+      write_to_file(")\n");
     }
     return;
   }
@@ -148,15 +145,14 @@ void process_node(TreeNode *current_node, State *current_state,
   else if (*current_state == WRITE_PRINT_STMT) {
     if (strcmp(current_node->label, "PrintStatement") == 0) {
       write_to_file("printf(");
-    }
-    if (strcmp(current_node->label, "Literal") == 0) {
+    } else if (strcmp(current_node->label, "Literal") == 0) {
       if (strcmp(current_node->token->c_type, "int") == 0) {
         write_to_file("\"%d\", ");
       } else if (strcmp(current_node->token->c_type, "float") == 0) {
         write_to_file("\"%f\", ");
       } else if ((strcmp(current_node->token->c_type, "char") == 0)) {
         write_to_file("\"%c\", ");
-      } else if ((strcmp(current_node->token->c_type, "char []") == 0)) {
+      } else if ((strcmp(current_node->token->c_type, "char[]") == 0)) {
         write_to_file("\"%s\", ");
       }
       write_to_file(current_node->token->lexeme);
@@ -211,8 +207,30 @@ void process_node(TreeNode *current_node, State *current_state,
     if (strcmp(current_node->label, "ForStatement") == 0) {
       write_to_file("for (");
     } else if (strcmp(current_node->label, "Identifier") == 0) {
+      printf("Identifier lexeme, length: %s, %d\n", current_node->token->lexeme,
+             current_node->token->str_length);
       *temp_node = *current_node;
-    } else if (strcmp(current_node->label, "Start") == 0) {
+    }
+  }
+
+  else if (*current_state == WRITE_ITERABLE) {
+    if (strcmp(current_node->label, "Identifier") == 0) {
+      write_to_file(temp_node->token->c_type);
+      write_to_file(" ");
+      write_to_file(temp_node->token->lexeme);
+      write_to_file("= 0; ");
+      write_to_file(temp_node->token->lexeme);
+      write_to_file(" < ");
+      sprintf(temp_str, "%d", temp_node->token->str_length);
+      write_to_file(temp_str);
+      write_to_file("; ");
+      write_to_file(temp_node->token->lexeme);
+      write_to_file("++)");
+    }
+  }
+
+  else if (*current_state == WRITE_RANGE) {
+    if (strcmp(current_node->label, "Start") == 0) {
       write_to_file(current_node->token->c_type);
       write_to_file(" ");
       write_to_file(temp_node->token->lexeme);
@@ -332,6 +350,11 @@ void set_state(State *current_state, TreeNode *current_node) {
     *current_state = WRITE_FN_CALL;
   } else if (strcmp(current_node->label, "Comment") == 0) {
     *current_state = WRITE_COMMENT;
+  } else if (strcmp(current_node->label, "Iterable") == 0) {
+    *current_state = WRITE_ITERABLE;
+  } else if ((*current_state == WRITE_ITERABLE) &&
+             (strcmp(current_node->label, "Range") == 0)) {
+    *current_state = WRITE_RANGE;
   }
   return;
 }
