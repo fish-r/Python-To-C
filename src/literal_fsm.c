@@ -50,8 +50,12 @@ PythonTokenType is_python_string(char *lexeme, size_t *matched_length) {
         }
         lexeme++;
     }
-    *matched_length = 0;
-    return UNKNOWN;
+    /* handle case where string is the last token*/
+    *matched_length = length;
+    printf("%d",length);
+    if (length==0){
+        return UNKNOWN;
+    }
 }
 
 PythonTokenType is_python_numeric(const char *lexeme, size_t *matched_length) {
@@ -59,7 +63,7 @@ PythonTokenType is_python_numeric(const char *lexeme, size_t *matched_length) {
     int decimal_point_count = 0;
     Int_State currentState = START_INT_STATE;
 
-    while ((*lexeme)){
+    while ((*lexeme)) {
         switch (currentState) {
             case START_INT_STATE:
                 if (*lexeme == '-' || is_digit(*lexeme)) {
@@ -77,7 +81,8 @@ PythonTokenType is_python_numeric(const char *lexeme, size_t *matched_length) {
                     currentState = DECIMAL_STATE;
                     length++;
                 } else {
-                    currentState = END_INT_STATE;
+                    *matched_length = length;
+                    return PYTOK_INT;
                 }
                 break;
 
@@ -86,7 +91,8 @@ PythonTokenType is_python_numeric(const char *lexeme, size_t *matched_length) {
                     decimal_point_count++;
                     length++;
                 } else {
-                    currentState = END_INT_STATE;
+                *matched_length = length;
+                    return PYTOK_FLOAT;
                 }
                 break;
 
@@ -97,16 +103,23 @@ PythonTokenType is_python_numeric(const char *lexeme, size_t *matched_length) {
                 } else {
                     return PYTOK_FLOAT;
                 }
+                break;
 
             case UNKNOWN_INT_STATE:
                 *matched_length = 0;
                 return UNKNOWN;
         }
-
+        if (*lexeme == '\0') {
+            break;
+        }
         lexeme++;
     }
-    *matched_length = 0;
-    return UNKNOWN;
+    /* handle case where numeric is the last token*/
+    *matched_length = length;
+    if (length==0){
+        return UNKNOWN;
+    }
+    return (decimal_point_count == 0) ? PYTOK_INT : PYTOK_FLOAT;
 }
 
 PythonTokenType is_python_list(const char *lexeme, size_t *matched_length, int *list_length) {
@@ -126,14 +139,12 @@ PythonTokenType is_python_list(const char *lexeme, size_t *matched_length, int *
                     length++;
                     if (*(lexeme + 1) == ']') /*if empty list*/
                     {
-                    *list_length=0;
-                    *matched_length = 2;
-                    return PYTOK_LIST_INT;
+                        *list_length=0;
+                        *matched_length = 2;
+                        return PYTOK_LIST_INT;
                     }
-                } else if (is_whitespace(*lexeme)) { /*skip whitespace*/
-                    lexeme++;
-                    length++;
-                } else {
+                }
+                else {
                     currentState = UNKNOWN_LIST_STATE;
                 }
                 break;
@@ -184,6 +195,17 @@ PythonTokenType is_python_list(const char *lexeme, size_t *matched_length, int *
         }
     }
 
-    *matched_length = 0;
-    return UNKNOWN;
+     /* handle case where list is the last token*/
+    *matched_length = length;
+
+    if (length==0){
+        return UNKNOWN;
+    }
+    if (is_int_list) {
+        return PYTOK_LIST_INT;
+    } else if (is_float_list) {
+        return PYTOK_LIST_FLOAT;
+    } else {
+        return PYTOK_LIST_STR;
+    }
 }

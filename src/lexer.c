@@ -411,23 +411,21 @@ Token **lex(char *source_code)
       str_length = longest_match - 2;
       break;
     case (PYTOK_LIST_INT):
-      c_type = "arr_int";
+      c_type = "int []";
       break;
     case (PYTOK_LIST_FLOAT):
-      c_type = "arr_float";
+      c_type = "float []";
       break;
     case (PYTOK_LIST_STR):
-      c_type = "arr_str";
+      c_type = "char* []";
       break;
     case (PYTOK_BOOLEAN):
-      c_type = "bool";
+      c_type = "int";
       break;
     case (PYTOK_COMMENT):
-      c_type = "comment";
       str_length = longest_match;
       break;
     case (PYTOK_MULTI_COMMENT):
-      c_type = "multi_comment";
       str_length = longest_match;
       break;
     default:
@@ -455,8 +453,8 @@ Token **lex(char *source_code)
           source_code[current_position] != '\t' &&
           source_code[current_position] != '\r')
       {
-        throwError("Unimplemented Unknown Token '%s' at line %d\n",
-                   matched_lexeme, current_line_number);
+        throwError("Unimplemented Unknown Token '%c' at line %d\n",
+                   source_code[current_position], current_line_number);
       }
       ++current_position;
     }
