@@ -627,16 +627,16 @@ size_t parseExpression(Token **tokens, TreeNode *currentNode, size_t index)
             tokens[index]->c_type = "float";
             break;
         case PYTOK_LIST_FLOAT:
-            tokens[index]->c_type = "arr_float";
+            tokens[index]->c_type = "float []";
             break;
         case PYTOK_LIST_INT:
-            tokens[index]->c_type = "arr_int";
+            tokens[index]->c_type = "int []";
             break;
         case PYTOK_LIST_STR:
-            tokens[index]->c_type = "arr_str";
+            tokens[index]->c_type = "char* []";
             break;
         case PYTOK_BOOLEAN:
-            tokens[index]->c_type = "bool";
+            tokens[index]->c_type = "int";
             break;
         default:
             break;
