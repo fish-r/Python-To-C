@@ -798,6 +798,12 @@ size_t parseBlock(Token **tokens, TreeNode *currentNode, size_t index)
         index++;
     }
 
+    /* clear all redundant EOLs */
+    while (tokens[index]->type == PYTOK_EOL)
+    {
+        index++;
+    }
+
     /* set current indent level */
     indent = tokens[index]->num_indentation;
 
@@ -831,6 +837,7 @@ size_t parseBlock(Token **tokens, TreeNode *currentNode, size_t index)
             index = parseReturnStatement(tokens, currentNode, index);
             break;
         case PYTOK_PRINT:
+            printf("enter print\n");
             index = parsePrint(tokens, currentNode, index);
             break;
         case PYTOK_IDENTIFIER:
@@ -851,6 +858,7 @@ size_t parseBlock(Token **tokens, TreeNode *currentNode, size_t index)
             index = parseComments(tokens, currentNode, index);
             break;
         case PYTOK_EOL:
+            printf("enter eol\n");
             index++;
             break;
         default:
