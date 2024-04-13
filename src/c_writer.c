@@ -199,9 +199,8 @@ void process_node(TreeNode *current_node, State *current_state,
       char *c_type;
       int i;
       for (i = 0; i < *token_count; i++) {
-        if (strcmp((*token_array)[i]->lexeme, current_node->token->lexeme) ==
-            0) {
-          c_type = (*token_array)[i]->c_type;
+        if (strcmp(token_array[i]->lexeme, current_node->token->lexeme) == 0) {
+          c_type = token_array[i]->c_type;
           break;
         }
       }

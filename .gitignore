@@ -53,9 +53,14 @@ dkms.conf
 
 output.c
 <<<<<<< HEAD
+<<<<<<< HEAD
 output.h
 input/
 =======
 ./input/helloworld.py
 output.h
 >>>>>>> 3a21678 (chore: update gitignore)
+=======
+./input/helloworld.py
+output.h
+>>>>>>> writer
