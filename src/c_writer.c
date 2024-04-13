@@ -10,15 +10,21 @@
 
 /* Function to traverse the tree using FSM */
 void traverse_tree(TreeNode *root, State *prev_state, TreeNode *temp_node,
-                   Token **token_array, int *token_count) {
+                   Token **token_array, int *token_count, NodeQueue *queue) {
 
   int i = 0;
   /* Process the current node */
   set_state(prev_state, root);
 
-  process_node(root, prev_state, temp_node, token_array, token_count);
+  process_node(root, prev_state, temp_node, token_array, token_count, queue);
 
   if (root->num_children == 0) {
+    return;
+  }
+  if (strcmp(root->label, "Program") != 0 &&
+      strcmp(root->parent->label, "Program") == 0 &&
+      strcmp(root->label, "FunctionDefinition") != 0) {
+    enqueueNode(queue, root);
     return;
   }
 
@@ -30,7 +36,7 @@ void traverse_tree(TreeNode *root, State *prev_state, TreeNode *temp_node,
       write_to_header_file(", ");
     }
     traverse_tree(root->children[i], prev_state, temp_node, token_array,
-                  token_count);
+                  token_count, queue);
   }
   /* On recursion exit write closing brackets */
   if (strcmp(root->label, "Block") == 0) {
@@ -38,10 +44,17 @@ void traverse_tree(TreeNode *root, State *prev_state, TreeNode *temp_node,
 
     write_to_file("}\n");
   }
+
+  else if (strcmp(root->label, "Program") == 0) {
+    /*printf("write main\n");
+    printf("peek front %s\n", queue->nodes[queue->front]->label);*/
+    write_main(queue, prev_state, temp_node, token_array, token_count, root);
+  }
 }
 
 void process_node(TreeNode *current_node, State *current_state,
-                  TreeNode *temp_node, Token **token_array, int *token_count) {
+                  TreeNode *temp_node, Token **token_array, int *token_count,
+                  NodeQueue *queue) {
   char temp_str[100];
   printf("Current State: %d, Current Label: %s\n", *current_state,
          current_node->label);
@@ -73,11 +86,18 @@ void process_node(TreeNode *current_node, State *current_state,
       printf("  String Length: %d\n", current_token->str_length); */
     }
   }
-  if (*current_state == WRITE_INCLUDES) {
+  if (*current_state == WRITE_GLOBAL_VARS) {
+
     if (strcmp(current_node->label, "Program") == 0) {
       write_to_file(
           "#include <stdio.h>\n#include <stdlib.h>\n#include \"output.h\"\n\n");
       write_to_header_file("#include <stdio.h>\n#include <stdlib.h>\n\n");
+      /*
+            for (i = 0; i < current_node->num_children; i++) {
+              if (strcmp(current_node->children[i]->label, "FunctionDefinition")
+         != 0) { enqueueNode(queue, current_node->children[i]); return;
+              }
+            }*/
     }
   }
 
@@ -381,9 +401,8 @@ void process_node(TreeNode *current_node, State *current_state,
 
 void set_state(State *current_state, TreeNode *current_node) {
   if (strcmp(current_node->label, "Program") == 0) {
-    *current_state = WRITE_INCLUDES;
+    *current_state = WRITE_GLOBAL_VARS;
   } else if (strcmp(current_node->label, "FunctionDefinition") == 0) {
-    printf("Setting state to write function definition\n");
     *current_state = WRITE_FN_DEF;
   } else if (strcmp(current_node->label, "IfStatement") == 0) {
     *current_state = WRITE_IF_STMT;
@@ -421,11 +440,13 @@ void write_c_file(TreeNode *root) {
   TreeNode *temp_node = (TreeNode *)malloc(sizeof(TreeNode));
   Token **token_array = (Token **)malloc(sizeof(Token));
   int token_count = 0;
+  NodeQueue *queue = createNodeQueue(MAX_NODES);
 
   clear_file("output.c");
   clear_file("output.h");
 
-  traverse_tree(root, &initial_state, temp_node, token_array, &token_count);
+  traverse_tree(root, &initial_state, temp_node, token_array, &token_count,
+                queue);
 }
 
 /* helper function to clear output.c */
@@ -464,6 +485,49 @@ void write_at_start(char *content) {
   fprintf(file, "%s", content);
 
   fclose(file);
+}
+
+void write_main(NodeQueue *queue, State *current_state, TreeNode *temp_node,
+                Token **token_array, int *token_count, TreeNode *current_node) {
+  TreeNode *node;
+  write_to_file("int main() {\n");
+  /* iterate through queue and write */
+  while (isNodeQueueEmpty(queue) != 1) {
+    node = dequeueNode(queue);
+    printf("Node: %s\n", node->label);
+    write_indent(4);
+    write_main_helper(queue, current_state, temp_node, token_array, token_count,
+                      node);
+  }
+  write_to_file("return 0; \n}\n");
+}
+void write_main_helper(NodeQueue *queue, State *current_state,
+                       TreeNode *temp_node, Token **token_array,
+                       int *token_count, TreeNode *node) {
+  int i;
+  set_state(current_state, node);
+  process_node(node, current_state, temp_node, token_array, token_count, queue);
+  if (node->num_children == 0) {
+    return;
+  }
+  for (i = 0; i < node->num_children; i++) {
+    printf("Child: %s\n", node->children[i]->label);
+    /* implement lookahead */
+    if (i > 0 && strcmp(node->children[i - 1]->label, "Parameter") == 0 &&
+        strcmp(node->children[i]->label, "Parameter") == 0) {
+      write_to_file(", ");
+      write_to_header_file(", ");
+    }
+
+    write_main_helper(queue, current_state, temp_node, token_array, token_count,
+                      node->children[i]);
+  }
+  /* On recursion exit write closing brackets */
+  if (strcmp(node->label, "Block") == 0) {
+    write_indent(node->token->num_indentation);
+
+    write_to_file("}\n");
+  }
 }
 
 /* helper function to write to "output.c" */

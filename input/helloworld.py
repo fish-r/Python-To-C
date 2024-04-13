@@ -4,3 +4,6 @@ def print_function(x, y):
         print(i)
     for n in range(1, 2, 3):
         print(n)
+
+
+print_function(1, 2)
