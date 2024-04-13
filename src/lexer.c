@@ -345,7 +345,6 @@ Token **lex(char *source_code)
                (candidate_token_type = is_python_comment(candidate_lexeme, &candidate_match_length)) != UNKNOWN)
       {
         token_type = candidate_token_type;
-        printf("%d",token_type);
         longest_match = candidate_match_length;
         /* convert python string of length 1 to char with single quote */
         /* else always double quote*/
