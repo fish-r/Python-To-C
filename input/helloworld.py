@@ -6,4 +6,10 @@ def print_function(x, y):
         print(n)
 
 
+for i in range(1, 2):
+    print(i)
 print_function(1, 2)
+
+x = 3
+z = "hel"
+print(z)

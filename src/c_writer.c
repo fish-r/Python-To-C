@@ -13,18 +13,21 @@ void traverse_tree(TreeNode *root, State *prev_state, TreeNode *temp_node,
                    Token **token_array, int *token_count, NodeQueue *queue) {
 
   int i = 0;
+  /* if part of global scope, dont process until main*/
+  if (strcmp(root->label, "Program") != 0 &&
+      strcmp(root->parent->label, "Program") == 0 &&
+      strcmp(root->label, "FunctionDefinition") != 0) {
+    printf("enqueue %s\n", root->label);
+    enqueueNode(queue, root);
+    return;
+  }
+
   /* Process the current node */
   set_state(prev_state, root);
 
   process_node(root, prev_state, temp_node, token_array, token_count, queue);
 
   if (root->num_children == 0) {
-    return;
-  }
-  if (strcmp(root->label, "Program") != 0 &&
-      strcmp(root->parent->label, "Program") == 0 &&
-      strcmp(root->label, "FunctionDefinition") != 0) {
-    enqueueNode(queue, root);
     return;
   }
 
@@ -511,7 +514,6 @@ void write_main_helper(NodeQueue *queue, State *current_state,
     return;
   }
   for (i = 0; i < node->num_children; i++) {
-    printf("Child: %s\n", node->children[i]->label);
     /* implement lookahead */
     if (i > 0 && strcmp(node->children[i - 1]->label, "Parameter") == 0 &&
         strcmp(node->children[i]->label, "Parameter") == 0) {
