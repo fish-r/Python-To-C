@@ -52,5 +52,10 @@ Mkfile.old
 dkms.conf
 
 output.c
+<<<<<<< HEAD
 output.h
 input/
+=======
+./input/helloworld.py
+output.h
+>>>>>>> 3a21678 (chore: update gitignore)
