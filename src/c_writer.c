@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/_types/_null.h>
 
 /* Define the maximum number of nodes in the tree */
 #define MAX_NODES 100
@@ -164,19 +165,10 @@ void process_node(TreeNode *current_node, State *current_state,
   else if (*current_state == WRITE_PRINT_STMT) {
     if (strcmp(current_node->label, "PrintStatement") == 0) {
       write_to_file("printf(");
-    } else if (strcmp(current_node->label, "Literal") == 0) {
-      if (strcmp(current_node->token->c_type, "int") == 0) {
-        write_to_file("\"%d\", ");
-      } else if (strcmp(current_node->token->c_type, "float") == 0) {
-        write_to_file("\"%f\", ");
-      } else if ((strcmp(current_node->token->c_type, "char") == 0)) {
-        write_to_file("\"%c\", ");
-      } else if ((strcmp(current_node->token->c_type, "char[]") == 0)) {
-        write_to_file("\"%s\", ");
-      }
-      write_to_file(current_node->token->lexeme);
-      write_to_file(")");
-    } else if (strcmp(current_node->label, "Identifier") == 0) {
+    }
+    /* Write List */
+    else if ((temp_node != NULL) &&
+             (strcmp(current_node->label, "Identifier") == 0)) {
       char *c_type;
       int i;
       for (i = 0; i < *token_count; i++) {
@@ -191,7 +183,51 @@ void process_node(TreeNode *current_node, State *current_state,
         write_to_file("\"%f\", ");
       } else if ((strcmp(c_type, "char") == 0)) {
         write_to_file("\"%c\", ");
-      } else if ((strcmp(c_type, "char[]"))) {
+      } else if ((strcmp(c_type, "char []"))) {
+        write_to_file("\"%s\", ");
+      }
+
+      write_to_file(temp_node->token->lexeme);
+      write_to_file("[");
+      write_to_file(current_node->token->lexeme);
+      write_to_file("]");
+      write_to_file(")");
+      /* make temp node point to null*/
+      temp_node = NULL;
+      return;
+    }
+    /* Literal */
+    else if (strcmp(current_node->label, "Literal") == 0) {
+      if (strcmp(current_node->token->c_type, "int") == 0) {
+        write_to_file("\"%d\", ");
+      } else if (strcmp(current_node->token->c_type, "float") == 0) {
+        write_to_file("\"%f\", ");
+      } else if ((strcmp(current_node->token->c_type, "char") == 0)) {
+        write_to_file("\"%c\", ");
+      } else if ((strcmp(current_node->token->c_type, "char []") == 0)) {
+        write_to_file("\"%s\", ");
+      }
+      write_to_file(current_node->token->lexeme);
+      write_to_file(")");
+      return;
+    }
+    /* Identifier */
+    else if (strcmp(current_node->label, "Identifier") == 0) {
+      char *c_type;
+      int i;
+      for (i = 0; i < *token_count; i++) {
+        if (strcmp(token_array[i]->lexeme, current_node->token->lexeme) == 0) {
+          c_type = token_array[i]->c_type;
+          break;
+        }
+      }
+      if (strcmp(c_type, "int") == 0) {
+        write_to_file("\"%d\", ");
+      } else if (strcmp(c_type, "float") == 0) {
+        write_to_file("\"%f\", ");
+      } else if ((strcmp(c_type, "char") == 0)) {
+        write_to_file("\"%c\", ");
+      } else if ((strcmp(c_type, "char []"))) {
         write_to_file("\"%s\", ");
       }
       write_to_file(current_node->token->lexeme);
@@ -245,6 +281,8 @@ void process_node(TreeNode *current_node, State *current_state,
       write_to_file("; ");
       write_to_file(temp_node->token->lexeme);
       write_to_file("++)");
+      /* store temp node lexeme to write temp_node_lexeme[curr_node_lexeme]*/
+      *temp_node = *current_node;
     }
   }
 
