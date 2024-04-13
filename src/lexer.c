@@ -345,40 +345,32 @@ Token **lex(char *source_code)
                (candidate_token_type = is_python_comment(candidate_lexeme, &candidate_match_length)) != UNKNOWN)
       {
         token_type = candidate_token_type;
+        printf("%d",token_type);
         longest_match = candidate_match_length;
         /* convert python string of length 1 to char with single quote */
         /* else always double quote*/
-        if (token_type==PYTOK_CHAR){
-              if (candidate_match_length==3)
-              {
-                char *modified_lexeme = malloc(3 * sizeof(char)); 
-                modified_lexeme[0] = '\''; 
-                modified_lexeme[1] = candidate_lexeme[1]; 
-                modified_lexeme[2] = '\''; 
-                modified_lexeme[3] = '\0'; 
-                strncpy(candidate_lexeme, modified_lexeme,3);
-                free(modified_lexeme); 
-              }
-              else{
-                char *modified_lexeme = malloc((longest_match + 3) * sizeof(char));
-                modified_lexeme[0] = '\"'; 
-                strncpy(modified_lexeme + 1, candidate_lexeme + 1, longest_match - 2); 
-                modified_lexeme[longest_match - 1] = '\"'; 
-                modified_lexeme[longest_match] = '\0'; 
-                strcpy(candidate_lexeme, modified_lexeme);
-                free(modified_lexeme);
-              }
-        if (token_type==PYTOK_STRING)
-        {     char *modified_lexeme = malloc((longest_match + 3) * sizeof(char));
-              modified_lexeme[0] = '\"'; 
-              strncpy(modified_lexeme + 1, candidate_lexeme + 1, longest_match - 2); 
-              modified_lexeme[longest_match - 1] = '\"'; 
-              modified_lexeme[longest_match] = '\0'; 
-              strcpy(candidate_lexeme, modified_lexeme);
-              free(modified_lexeme);
-          }
+        if (token_type == PYTOK_CHAR) {
+            char quote = '\'';
+            if (candidate_match_length != 3) {
+                quote = '\"';
+            }
+            char *modified_lexeme = malloc((longest_match + 3) * sizeof(char));
+            modified_lexeme[0] = quote;
+            strncpy(modified_lexeme + 1, candidate_lexeme + 1, longest_match - 2);
+            modified_lexeme[longest_match - 1] = quote;
+            modified_lexeme[longest_match] = '\0';
+            strcpy(candidate_lexeme, modified_lexeme);
+            free(modified_lexeme);
+        } else if (token_type == PYTOK_STRING) {
+            char *modified_lexeme = malloc((longest_match + 3) * sizeof(char));
+            modified_lexeme[0] = '\"';
+            strncpy(modified_lexeme + 1, candidate_lexeme + 1, longest_match - 2);
+            modified_lexeme[longest_match - 1] = '\"';
+            modified_lexeme[longest_match] = '\0';
+            strcpy(candidate_lexeme, modified_lexeme);
+            free(modified_lexeme);
         }
-        strncpy(matched_lexeme, candidate_lexeme, candidate_match_length);
+      strncpy(matched_lexeme, candidate_lexeme, candidate_match_length);
       }
       else if ((candidate_token_type = is_python_list(candidate_lexeme, &candidate_match_length, &list_length)) != UNKNOWN)
       {

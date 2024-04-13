@@ -51,9 +51,11 @@ PythonTokenType is_python_string(char *lexeme, size_t *matched_length) {
         lexeme++;
     }
     /* handle case where string is the last token*/
-    *matched_length = length;
-    printf("%d",length);
-    if (length==0){
+    if (currentState == END_STR_STATE) {
+        *matched_length = length;
+        return (length <= 3) ? PYTOK_CHAR : PYTOK_STRING;
+    } else {
+        *matched_length = 0;
         return UNKNOWN;
     }
 }
@@ -108,9 +110,6 @@ PythonTokenType is_python_numeric(const char *lexeme, size_t *matched_length) {
             case UNKNOWN_INT_STATE:
                 *matched_length = 0;
                 return UNKNOWN;
-        }
-        if (*lexeme == '\0') {
-            break;
         }
         lexeme++;
     }
