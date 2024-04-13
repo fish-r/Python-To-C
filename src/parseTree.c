@@ -169,7 +169,6 @@ TreeNode *buildParseTreeFromTokens(Token **tokens, size_t num_tokens)
             }
             break;
         case PYTOK_EOF:
-            printf("EOF\n");
             index++;
             if (index < num_tokens)
             {
@@ -382,6 +381,7 @@ size_t parseFuncDef(Token **tokens, TreeNode *currentNode, size_t index)
     currentNode = currentNode->children[currentNode->num_children - 1];
     index++;
 
+
     /* set identifier c_type to return type */
     tokens[index]->c_type = strdup(returnType);
     /* add identifier as child */
@@ -390,7 +390,6 @@ size_t parseFuncDef(Token **tokens, TreeNode *currentNode, size_t index)
 
     /* skip left paranthesis */
     index++;
-
     /* peek at next token -> if no params */
     if (peekToken(tokens[index]) == PYTOK_RIGHTPARENTHESIS)
     {
@@ -500,9 +499,13 @@ size_t parseCondition(Token **tokens, TreeNode *currentNode, size_t index)
 {
     /* <term> <op> <term> */
 
+
     /* add condition as child */
     addChild(currentNode, createNode("Condition", NULL));
     currentNode = currentNode->children[currentNode->num_children - 1];
+
+    /* remove left paran */
+    index++;
 
     /* add first term as child */
     addChild(currentNode, createNode("Term", tokens[index]));
@@ -514,6 +517,9 @@ size_t parseCondition(Token **tokens, TreeNode *currentNode, size_t index)
 
     /* add second term as child */
     addChild(currentNode, createNode("Term", tokens[index]));
+    index++;
+
+    /* remove right paran */
     index++;
 
     return index;
@@ -779,6 +785,7 @@ size_t parseFunctionCall(Token **tokens, TreeNode *currentNode, size_t index)
 
 size_t parseBlock(Token **tokens, TreeNode *currentNode, size_t index)
 {
+
     /* Block -> : <statements> */
     int indent, parentIndent;
 
@@ -837,7 +844,6 @@ size_t parseBlock(Token **tokens, TreeNode *currentNode, size_t index)
             index = parseReturnStatement(tokens, currentNode, index);
             break;
         case PYTOK_PRINT:
-            printf("enter print\n");
             index = parsePrint(tokens, currentNode, index);
             break;
         case PYTOK_IDENTIFIER:
@@ -858,7 +864,6 @@ size_t parseBlock(Token **tokens, TreeNode *currentNode, size_t index)
             index = parseComments(tokens, currentNode, index);
             break;
         case PYTOK_EOL:
-            printf("enter eol\n");
             index++;
             break;
         default:
