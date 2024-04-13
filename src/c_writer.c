@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/_types/_null.h>
+#include <stddef.h>
 
 /* Define the maximum number of nodes in the tree */
 #define MAX_NODES 100
@@ -71,13 +71,13 @@ void process_node(TreeNode *current_node, State *current_state,
   /* Store identifier token in array */
   if (strcmp(current_node->label, "Identifier") == 0) {
     Token *current_token = current_node->token;
-    if (!is_token_present(*token_array, *token_count, current_token)) {
+    if (!is_token_present(token_array, *token_count, current_token)) {
       if (current_token->c_type != NULL) {
-        (*token_array)[*token_count] = current_token;
+        token_array[*token_count] = current_token;
         (*token_count)++;
       } else {
         current_token->c_type = "int";
-        (*token_array)[*token_count] = current_token;
+        token_array[*token_count] = current_token;
         (*token_count)++;
       }
       /*
