@@ -105,6 +105,38 @@ char *findReturnType(Token **tokens, size_t index)
             }
             tokenArray[tokenCount] = tokens[index];
             tokenCount++;
+            
+        }
+        /* for identifier in the for loop*/
+        else if (tokens[index]->type == PYTOK_IDENTIFIER && peekToken(tokens[index + 1]) == PYTOK_IN){ 
+            /* if return in for loop */
+            switch (peekToken(tokens[index + 2])){
+                case PYTOK_CHAR:
+                    tokens[index]->c_type = "char";
+                    break;
+                case PYTOK_STRING:
+                    tokens[index]->c_type = "char"; /* for letter in word*/
+                    break;
+                case PYTOK_LIST_FLOAT:
+                    tokens[index]->c_type = "float"; /* for item in [5.5,2.6]*/
+                    break;
+                case PYTOK_LIST_INT:
+                    tokens[index]->c_type = "int"; /*for item in [1,2,3]*/
+                    break;
+                case PYTOK_LIST_STR:
+                    tokens[index]->c_type = "char* []"; /*for item in ["hi","hello"]*/
+                    break;
+                case PYTOK_BOOLEAN:
+                    tokens[index]->c_type = "int"; /* for i in [True,False]*/
+                    break;
+                case PYTOK_RANGE:
+                    tokens[index]->c_type = "int"; /* for i in range*/
+                    break;
+                default:
+                    break;
+            }
+            tokenArray[tokenCount] = tokens[index];
+            tokenCount++;
         }
         index++;
     }
