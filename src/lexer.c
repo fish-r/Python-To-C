@@ -451,7 +451,7 @@ Token **lex(char *source_code)
       ++current_position;
     }
   }
-  final_token = create_token(PYTOK_EOL, "EOL", 0, 0, "EOL", 0);
+  final_token = create_token(PYTOK_EOL, "EOL", 0, 0, "void", 0);
   token_stream = (Token **)realloc(token_stream, (token_count + 1) * sizeof(Token *));
   token_stream[token_count] = final_token;
   token_count++;

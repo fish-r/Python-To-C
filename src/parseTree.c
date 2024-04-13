@@ -4,6 +4,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define MAX_TOKENS 1000
+Token *tokenArray[MAX_TOKENS]; 
+size_t tokenCount = 0;
+
 TreeNode *createNode(char *label, Token *token)
 {
     TreeNode *node = (TreeNode *)malloc(sizeof(TreeNode));
@@ -58,20 +62,63 @@ PythonTokenType peekToken(Token *token)
 
 char *findReturnType(Token **tokens, size_t index)
 {
-    while (tokens[index]->type != PYTOK_RETURN || tokens[index]->type != PYTOK_EOF)
+    char *returnType = NULL;
+    int i;
+    while (tokens[index]->type != PYTOK_RETURN && tokens[index]->type != PYTOK_EOF)
     {
         /* check if current token is EOF */
         if (tokens[index]->type == PYTOK_EOF)
         {
-            return "void";
+            returnType = "void";
+            break;
         }
-        if (tokens[index]->type == PYTOK_RETURN)
+        if (tokens[index]->type == PYTOK_IDENTIFIER && peekToken(tokens[index + 1]) == PYTOK_ASSIGNMENT)
         {
-            return tokens[index + 1]->c_type;
+            switch (peekToken(tokens[index + 2]))
+            {
+                case PYTOK_CHAR:
+                    tokens[index]->c_type = "char";
+                    break;
+                case PYTOK_STRING:
+                    tokens[index]->c_type = "char []";
+                    break;
+                case PYTOK_INT:
+                    tokens[index]->c_type = "int";
+                    break;
+                case PYTOK_FLOAT:
+                    tokens[index]->c_type = "float";
+                    break;
+                case PYTOK_LIST_FLOAT:
+                    tokens[index]->c_type = "float []";
+                    break;
+                case PYTOK_LIST_INT:
+                    tokens[index]->c_type = "int []";
+                    break;
+                case PYTOK_LIST_STR:
+                    tokens[index]->c_type = "char* []";
+                    break;
+                case PYTOK_BOOLEAN:
+                    tokens[index]->c_type = "int";
+                    break;
+                default:
+                    break;
+            }
+            tokenArray[tokenCount] = tokens[index];
+            tokenCount++;
         }
         index++;
     }
-    return tokens[index + 1]->c_type;
+    for (i = 0; i < tokenCount; i++) {
+        printf("[%d] Type: %s, Lexeme: %s\n", i, tokenArray[i]->c_type, tokenArray[i]->lexeme);
+    }
+    for (i = 0; i < tokenCount; i++)
+    {
+        if (strcmp(tokens[index + 1]->lexeme, tokenArray[i]->lexeme) == 0)
+        {
+            return tokenArray[i]->c_type;
+        }
+    }
+    return returnType;
 }
 
 int findNumParams(Token **tokens, size_t index)
