@@ -256,6 +256,7 @@ Token **lex(char *source_code)
   int current_line_number = 1;
   int current_indentation = 0;
   char *c_type = NULL;
+  char *modified_lexeme;
   int str_length = 0;
   int list_length = 0;
 
@@ -353,7 +354,7 @@ Token **lex(char *source_code)
             if (candidate_match_length != 3) {
                 quote = '\"';
             }
-            char *modified_lexeme = malloc((longest_match + 3) * sizeof(char));
+            modified_lexeme = malloc((longest_match + 3) * sizeof(char));
             modified_lexeme[0] = quote;
             strncpy(modified_lexeme + 1, candidate_lexeme + 1, longest_match - 2);
             modified_lexeme[longest_match - 1] = quote;
@@ -361,7 +362,7 @@ Token **lex(char *source_code)
             strcpy(candidate_lexeme, modified_lexeme);
             free(modified_lexeme);
         } else if (token_type == PYTOK_STRING) {
-            char *modified_lexeme = malloc((longest_match + 3) * sizeof(char));
+            modified_lexeme = malloc((longest_match + 3) * sizeof(char));
             modified_lexeme[0] = '\"';
             strncpy(modified_lexeme + 1, candidate_lexeme + 1, longest_match - 2);
             modified_lexeme[longest_match - 1] = '\"';
