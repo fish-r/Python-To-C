@@ -504,8 +504,11 @@ size_t parseCondition(Token **tokens, TreeNode *currentNode, size_t index)
     addChild(currentNode, createNode("Condition", NULL));
     currentNode = currentNode->children[currentNode->num_children - 1];
 
+
     /* remove left paran */
-    index++;
+    if(tokens[index]->type == PYTOK_LEFTPARENTHESIS){
+        index++;
+    }
 
     /* add first term as child */
     addChild(currentNode, createNode("Term", tokens[index]));
@@ -520,7 +523,9 @@ size_t parseCondition(Token **tokens, TreeNode *currentNode, size_t index)
     index++;
 
     /* remove right paran */
-    index++;
+    if(tokens[index]->type == PYTOK_RIGHTPARENTHESIS){
+        index++;
+    }
 
     return index;
 }
