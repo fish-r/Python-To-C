@@ -171,7 +171,8 @@ void process_node(TreeNode *current_node, State *current_state,
     }
     /* Write List */
     else if ((temp_node != NULL) &&
-             (strcmp(current_node->label, "Identifier") == 0)) {
+             (strcmp(current_node->label, "Identifier") == 0) &&
+             (temp_node->token->c_type == NULL)) {
       char *c_type;
       int i;
       for (i = 0; i < *token_count; i++) {
