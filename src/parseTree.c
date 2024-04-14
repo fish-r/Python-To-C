@@ -60,11 +60,11 @@ PythonTokenType peekToken(Token *token)
     }
 }
 
-char *findReturnType(Token **tokens, size_t index)
+char *findReturnType(Token **tokens, size_t index, size_t num_tokens)
 {
     char *returnType = NULL;
     int i;
-    while (tokens[index]->type != PYTOK_EOF)
+    while (index + 2 < num_tokens & tokens[index]->type != PYTOK_EOF)
     {
         /* check if current token is EOF */
         if (tokens[index]->type == PYTOK_EOF)
@@ -200,7 +200,7 @@ TreeNode *buildParseTreeFromTokens(Token **tokens, size_t num_tokens)
             }
             break;
         case PYTOK_DEF:
-            index = parseFuncDef(tokens, currentNode, index);
+            index = parseFuncDef(tokens, currentNode, index, num_tokens);
             if (index < num_tokens)
             {
                 currentToken = tokens[index];
@@ -517,10 +517,10 @@ size_t parseForStatement(Token **tokens, TreeNode *currentNode, size_t index)
     return index;
 }
 
-size_t parseFuncDef(Token **tokens, TreeNode *currentNode, size_t index)
+size_t parseFuncDef(Token **tokens, TreeNode *currentNode, size_t index, size_t num_tokens)
 {
     /* find return type */
-    char *returnType = findReturnType(tokens, index);
+    char *returnType = findReturnType(tokens, index, num_tokens);
 
     /* add child */
     addChild(currentNode, createNode("FunctionDefinition", tokens[index]));

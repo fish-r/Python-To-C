@@ -457,17 +457,6 @@ Token **lex(char *source_code)
   token_count++;
   token_stream[token_count] = create_token(PYTOK_EOF, "EOF", 0, 0, "EOF", str_length);
   return token_stream;
-  /* ignore below cos token_stream is needed
-  for (i = 0; i < token_count; i++)
-  {
-    free_token(token_stream[i]);
-  }
-  free(token_stream);
-
-  free(source_code);
-
-  return 0;
-  */
 }
 
 Token *create_token(PythonTokenType type, const char *lexeme, int line_number, int num_indentation, char *c_type, int str_length)
