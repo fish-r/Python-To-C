@@ -98,8 +98,6 @@ TreeNode *buildParseTreeFromTokens(Token **tokens, size_t num_tokens)
     TreeNode *currentNode = program;
     size_t index = 0;
     Token *currentToken = tokens[index];
-    int mainFuncBool = 0;
-    TreeNode *mainFunc;
 
     printf("\nBuild parse tree start\n");
 
@@ -110,15 +108,7 @@ TreeNode *buildParseTreeFromTokens(Token **tokens, size_t num_tokens)
         switch (currentToken->type)
         {
         case PYTOK_FOR:
-            /* check if main function node is created, if not created */
-            if (mainFuncBool == 0){
-                addChild(currentNode, createNode("FunctionDefinition", create_token(PYTOK_DEF, "main", 0, 0, "main", 0)));
-                mainFunc = currentNode->children[currentNode->num_children - 1];
-                addChild(mainFunc, createNode("Identifier", create_token(PYTOK_IDENTIFIER, "main", 0, 0, "main", 0)));
-                addChild(mainFunc, createNode("EOL", create_token(PYTOK_EOL, "EOL", 0, 0, "EOL", 0)));
-                mainFuncBool = 1;
-            }
-            index = parseForStatement(tokens, mainFunc, index);
+            index = parseForStatement(tokens, program, index);
             if (index < num_tokens)
             {
                 currentToken = tokens[index];
@@ -133,78 +123,42 @@ TreeNode *buildParseTreeFromTokens(Token **tokens, size_t num_tokens)
             break;
 
         case PYTOK_PRINT:
-            /* check if main function node is created, if not created */
-            if (mainFuncBool == 0){
-                addChild(currentNode, createNode("FunctionDefinition", create_token(PYTOK_DEF, "main", 0, 0, "main", 0)));
-                mainFunc = currentNode->children[currentNode->num_children - 1];
-                addChild(mainFunc, createNode("Identifier", create_token(PYTOK_IDENTIFIER, "main", 0, 0, "main", 0)));
-                addChild(mainFunc, createNode("EOL", create_token(PYTOK_EOL, "EOL", 0, 0, "EOL", 0)));
-                mainFuncBool = 1;
-            }
-            index = parsePrint(tokens, mainFunc, index);
+            index = parsePrint(tokens, program, index);
             if (index < num_tokens)
             {
                 currentToken = tokens[index];
             }
             break;
         case PYTOK_ELSE:
-            if (mainFuncBool == 0){
-                addChild(currentNode, createNode("FunctionDefinition", create_token(PYTOK_DEF, "main", 0, 0, "main", 0)));
-                mainFunc = currentNode->children[currentNode->num_children - 1];
-                addChild(mainFunc, createNode("Identifier", create_token(PYTOK_IDENTIFIER, "main", 0, 0, "main", 0)));
-                addChild(mainFunc, createNode("EOL", create_token(PYTOK_EOL, "EOL", 0, 0, "EOL", 0)));
-                mainFuncBool = 1;
-            }
-            index = parseElseStatement(tokens, mainFunc, index);
+            index = parseElseStatement(tokens, program, index);
             if (index < num_tokens)
             {
                 currentToken = tokens[index];
             }
             break;
         case PYTOK_ELIF:
-            if (mainFuncBool == 0){
-                addChild(currentNode, createNode("FunctionDefinition", create_token(PYTOK_DEF, "main", 0, 0, "main", 0)));
-                mainFunc = currentNode->children[currentNode->num_children - 1];
-                addChild(mainFunc, createNode("Identifier", create_token(PYTOK_IDENTIFIER, "main", 0, 0, "main", 0)));
-                addChild(mainFunc, createNode("EOL", create_token(PYTOK_EOL, "EOL", 0, 0, "EOL", 0)));
-                mainFuncBool = 1;
-            }
-            index = parseElifStatement(tokens, mainFunc, index);
+            index = parseElifStatement(tokens, program, index);
             if (index < num_tokens)
             {
                 currentToken = tokens[index];
             }
             break;
         case PYTOK_IF:
-            if (mainFuncBool == 0){
-                addChild(currentNode, createNode("FunctionDefinition", create_token(PYTOK_DEF, "main", 0, 0, "main", 0)));
-                mainFunc = currentNode->children[currentNode->num_children - 1];
-                addChild(mainFunc, createNode("Identifier", create_token(PYTOK_IDENTIFIER, "main", 0, 0, "main", 0)));
-                addChild(mainFunc, createNode("EOL", create_token(PYTOK_EOL, "EOL", 0, 0, "EOL", 0)));
-                mainFuncBool = 1;
-            }
-            index = parseIfStatement(tokens, mainFunc, index);
+            index = parseIfStatement(tokens, program, index);
             if (index < num_tokens)
             {
                 currentToken = tokens[index];
             }
             break;
         case PYTOK_IDENTIFIER:
-            if (mainFuncBool == 0){
-                addChild(currentNode, createNode("FunctionDefinition", create_token(PYTOK_DEF, "main", 0, 0, "main", 0)));
-                mainFunc = currentNode->children[currentNode->num_children - 1];
-                addChild(mainFunc, createNode("Identifier", create_token(PYTOK_IDENTIFIER, "main", 0, 0, "main", 0)));
-                addChild(mainFunc, createNode("EOL", create_token(PYTOK_EOL, "EOL", 0, 0, "EOL", 0)));
-                mainFuncBool = 1;
-            }
             /* check if there is () after identifier */
             if (peekToken(tokens[index + 1]) == PYTOK_LEFTPARENTHESIS)
             {
-                index = parseFunctionCall(tokens, mainFunc, index);
+                index = parseFunctionCall(tokens, program, index);
             }
             else
             {
-                index = parseExpression(tokens, mainFunc, index);
+                index = parseExpression(tokens, program, index);
             }
             if (index < num_tokens)
             {
@@ -212,14 +166,7 @@ TreeNode *buildParseTreeFromTokens(Token **tokens, size_t num_tokens)
             }
             break;
         case PYTOK_WHILE:
-            if (mainFuncBool == 0){
-                addChild(currentNode, createNode("FunctionDefinition", create_token(PYTOK_DEF, "main", 0, 0, "main", 0)));
-                mainFunc = currentNode->children[currentNode->num_children - 1];
-                addChild(mainFunc, createNode("Identifier", create_token(PYTOK_IDENTIFIER, "main", 0, 0, "main", 0)));
-                addChild(mainFunc, createNode("EOL", create_token(PYTOK_EOL, "EOL", 0, 0, "EOL", 0)));
-                mainFuncBool = 1;
-            }
-            index = parseWhileStatement(tokens, mainFunc, index);
+            index = parseWhileStatement(tokens, program, index);
             if (index < num_tokens)
             {
                 currentToken = tokens[index];
@@ -234,28 +181,14 @@ TreeNode *buildParseTreeFromTokens(Token **tokens, size_t num_tokens)
             }
             break;
         case PYTOK_COMMENT:
-            if (mainFuncBool == 0){
-                addChild(currentNode, createNode("FunctionDefinition", create_token(PYTOK_DEF, "main", 0, 0, "main", 0)));
-                mainFunc = currentNode->children[currentNode->num_children - 1];
-                addChild(mainFunc, createNode("Identifier", create_token(PYTOK_IDENTIFIER, "main", 0, 0, "main", 0)));
-                addChild(mainFunc, createNode("EOL", create_token(PYTOK_EOL, "EOL", 0, 0, "EOL", 0)));
-                mainFuncBool = 1;
-            }
-            index = parseComments(tokens, mainFunc, index);
+            index = parseComments(tokens, program, index);
             if (index < num_tokens)
             {
                 currentToken = tokens[index];
             }
             break;
         case PYTOK_MULTI_COMMENT:
-            if (mainFuncBool == 0){
-                addChild(currentNode, createNode("FunctionDefinition", create_token(PYTOK_DEF, "main", 0, 0, "main", 0)));
-                mainFunc = currentNode->children[currentNode->num_children - 1];
-                addChild(mainFunc, createNode("Identifier", create_token(PYTOK_IDENTIFIER, "main", 0, 0, "main", 0)));
-                addChild(mainFunc, createNode("EOL", create_token(PYTOK_EOL, "EOL", 0, 0, "EOL", 0)));
-                mainFuncBool = 1;
-            }
-            index = parseComments(tokens, mainFunc, index);
+            index = parseComments(tokens, program, index);
             if (index < num_tokens)
             {
                 currentToken = tokens[index];
