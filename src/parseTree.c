@@ -70,9 +70,7 @@ char *findReturnType(Token **tokens, size_t index)
             return "void";
         }
         if (tokens[index]->type == PYTOK_RETURN)
-        if (tokens[index]->type == PYTOK_RETURN)
         {
-            return tokens[index + 1]->c_type;
             return tokens[index + 1]->c_type;
         }
         index++; 
