@@ -83,8 +83,7 @@ PythonTokenType is_python_numeric(const char *lexeme, size_t *matched_length) {
                     currentState = DECIMAL_STATE;
                     length++;
                 } else {
-                    *matched_length = length;
-                    return PYTOK_INT;
+                    currentState = END_INT_STATE;
                 }
                 break;
 
@@ -93,8 +92,7 @@ PythonTokenType is_python_numeric(const char *lexeme, size_t *matched_length) {
                     decimal_point_count++;
                     length++;
                 } else {
-                *matched_length = length;
-                    return PYTOK_FLOAT;
+                    currentState = END_INT_STATE;
                 }
                 break;
 
