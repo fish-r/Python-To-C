@@ -147,6 +147,32 @@ void process_node(TreeNode *current_node, State *current_state,
         write_to_header_file(current_node->token->lexeme);
         write_to_header_file("(");
       }
+      else if (strcmp(current_node->token->c_type, "int []") == 0)
+      {
+        write_to_file("int* ");
+        write_to_file(" ");
+        write_to_file(current_node->token->lexeme);
+        write_to_file("(");
+
+        /* write to header file */
+        write_to_header_file("int* ");
+        write_to_header_file(" ");
+        write_to_header_file(current_node->token->lexeme);
+        write_to_header_file("(");
+      }
+      else if (strcmp(current_node->token->c_type, "float []") == 0)
+      {
+        write_to_file("float* ");
+        write_to_file(" ");
+        write_to_file(current_node->token->lexeme);
+        write_to_file("(");
+
+        /* write to header file */
+        write_to_header_file("float* ");
+        write_to_header_file(" ");
+        write_to_header_file(current_node->token->lexeme);
+        write_to_header_file("(");
+      }
       else
       {
         write_to_file(current_node->token->c_type);

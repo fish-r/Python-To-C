@@ -700,14 +700,20 @@ size_t parseExpression(Token **tokens, TreeNode *currentNode, size_t index)
             index++;
             break;
         case PYTOK_LIST_FLOAT:
+            tokens[index]->lexeme[0] = '{';
+            tokens[index]->lexeme[strlen(tokens[index]->lexeme)-1] = '}';
             addChild(currentNode, createNode("Literal", tokens[index]));
             index++;
             break;
         case PYTOK_LIST_INT:
+            tokens[index]->lexeme[0] = '{';
+            tokens[index]->lexeme[strlen(tokens[index]->lexeme)-1] = '}';
             addChild(currentNode, createNode("Literal", tokens[index]));
             index++;
             break;
         case PYTOK_LIST_STR:
+            tokens[index]->lexeme[0] = '{';
+            tokens[index]->lexeme[strlen(tokens[index]->lexeme)-1] = '}';
             addChild(currentNode, createNode("Literal", tokens[index]));
             index++;
             break;
