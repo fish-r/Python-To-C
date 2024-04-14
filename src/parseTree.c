@@ -64,7 +64,7 @@ char *findReturnType(Token **tokens, size_t index)
 {
     char *returnType = NULL;
     int i;
-    while (tokens[index]->type != PYTOK_RETURN && tokens[index]->type != PYTOK_EOF)
+    while (tokens[index]->type != PYTOK_EOF)
     {
         /* check if current token is EOF */
         if (tokens[index]->type == PYTOK_EOF)
