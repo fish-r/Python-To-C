@@ -690,7 +690,10 @@ void write_main_helper(NodeQueue *queue, State *current_state,
         strcmp(node->children[i]->label, "Parameter") == 0)
     {
       write_to_file(", ");
-      write_to_header_file(", ");
+      if (strcmp(node->label, "FunctionDefinition") == 0)
+      {
+        write_to_header_file(", ");
+      }
     }
 
     write_main_helper(queue, current_state, temp_node, token_array, token_count,
