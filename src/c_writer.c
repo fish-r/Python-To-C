@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stddef.h>
 
 /* Define the maximum number of nodes in the tree */
 #define MAX_NODES 100
@@ -9,14 +10,24 @@
 
 /* Function to traverse the tree using FSM */
 void traverse_tree(TreeNode *root, State *prev_state, TreeNode *temp_node,
-                   Token ***token_array, int *token_count)
+                   Token **token_array, int *token_count, NodeQueue *queue)
 {
 
   int i = 0;
+  /* if part of global scope, dont process until main*/
+  if (strcmp(root->label, "Program") != 0 &&
+      strcmp(root->parent->label, "Program") == 0 &&
+      strcmp(root->label, "FunctionDefinition") != 0)
+  {
+    printf("enqueue %s\n", root->label);
+    enqueueNode(queue, root);
+    return;
+  }
+
   /* Process the current node */
   set_state(prev_state, root);
 
-  process_node(root, prev_state, temp_node, token_array, token_count);
+  process_node(root, prev_state, temp_node, token_array, token_count, queue);
 
   if (root->num_children == 0)
   {
@@ -36,7 +47,7 @@ void traverse_tree(TreeNode *root, State *prev_state, TreeNode *temp_node,
       }
     }
     traverse_tree(root->children[i], prev_state, temp_node, token_array,
-                  token_count);
+                  token_count, queue);
   }
   /* On recursion exit write closing brackets */
   if (strcmp(root->label, "Block") == 0)
@@ -45,10 +56,18 @@ void traverse_tree(TreeNode *root, State *prev_state, TreeNode *temp_node,
 
     write_to_file("}\n");
   }
+
+  else if (strcmp(root->label, "Program") == 0)
+  {
+    /*printf("write main\n");
+    printf("peek front %s\n", queue->nodes[queue->front]->label);*/
+    write_main(queue, prev_state, temp_node, token_array, token_count, root);
+  }
 }
 
 void process_node(TreeNode *current_node, State *current_state,
-                  TreeNode *temp_node, Token ***token_array, int *token_count)
+                  TreeNode *temp_node, Token **token_array, int *token_count,
+                  NodeQueue *queue)
 {
   char temp_str[100];
   printf("Current State: %d, Current Label: %s\n", *current_state,
@@ -63,17 +82,17 @@ void process_node(TreeNode *current_node, State *current_state,
   if (strcmp(current_node->label, "Identifier") == 0)
   {
     Token *current_token = current_node->token;
-    if (!is_token_present(*token_array, *token_count, current_token))
+    if (!is_token_present(token_array, *token_count, current_token))
     {
       if (current_token->c_type != NULL)
       {
-        (*token_array)[*token_count] = current_token;
+        token_array[*token_count] = current_token;
         (*token_count)++;
       }
       else
       {
         current_token->c_type = "int";
-        (*token_array)[*token_count] = current_token;
+        token_array[*token_count] = current_token;
         (*token_count)++;
       }
       /*
@@ -87,13 +106,20 @@ void process_node(TreeNode *current_node, State *current_state,
       printf("  String Length: %d\n", current_token->str_length); */
     }
   }
-  if (*current_state == WRITE_INCLUDES)
+  if (*current_state == WRITE_GLOBAL_VARS)
   {
+
     if (strcmp(current_node->label, "Program") == 0)
     {
       write_to_file(
           "#include <stdio.h>\n#include <stdlib.h>\n#include \"output.h\"\n\n");
       write_to_header_file("#include <stdio.h>\n#include <stdlib.h>\n\n");
+      /*
+            for (i = 0; i < current_node->num_children; i++) {
+              if (strcmp(current_node->children[i]->label, "FunctionDefinition")
+         != 0) { enqueueNode(queue, current_node->children[i]); return;
+              }
+            }*/
     }
   }
 
@@ -117,6 +143,32 @@ void process_node(TreeNode *current_node, State *current_state,
 
         /* write to header file */
         write_to_header_file("char* ");
+        write_to_header_file(" ");
+        write_to_header_file(current_node->token->lexeme);
+        write_to_header_file("(");
+      }
+      else if (strcmp(current_node->token->c_type, "int []") == 0)
+      {
+        write_to_file("int* ");
+        write_to_file(" ");
+        write_to_file(current_node->token->lexeme);
+        write_to_file("(");
+
+        /* write to header file */
+        write_to_header_file("int* ");
+        write_to_header_file(" ");
+        write_to_header_file(current_node->token->lexeme);
+        write_to_header_file("(");
+      }
+      else if (strcmp(current_node->token->c_type, "float []") == 0)
+      {
+        write_to_file("float* ");
+        write_to_file(" ");
+        write_to_file(current_node->token->lexeme);
+        write_to_file("(");
+
+        /* write to header file */
+        write_to_header_file("float* ");
         write_to_header_file(" ");
         write_to_header_file(current_node->token->lexeme);
         write_to_header_file("(");
@@ -213,36 +265,18 @@ void process_node(TreeNode *current_node, State *current_state,
     {
       write_to_file("printf(");
     }
-    else if (strcmp(current_node->label, "Literal") == 0)
-    {
-      if (strcmp(current_node->token->c_type, "int") == 0)
-      {
-        write_to_file("\"%d\", ");
-      }
-      else if (strcmp(current_node->token->c_type, "float") == 0)
-      {
-        write_to_file("\"%f\", ");
-      }
-      else if ((strcmp(current_node->token->c_type, "char") == 0))
-      {
-        write_to_file("\"%c\", ");
-      }
-      else if ((strcmp(current_node->token->c_type, "char[]") == 0))
-      {
-        write_to_file("\"%s\", ");
-      }
-      write_to_file(current_node->token->lexeme);
-      write_to_file(")");
-    }
-    else if (strcmp(current_node->label, "Identifier") == 0)
+    /* Write List */
+    else if ((temp_node != NULL) &&
+             (strcmp(current_node->label, "Identifier") == 0) &&
+             (temp_node->token->c_type == NULL))
     {
       char *c_type;
       int i;
       for (i = 0; i < *token_count; i++)
       {
-        if (strcmp((*token_array)[i]->lexeme, current_node->token->lexeme) == 0)
+        if (strcmp(token_array[i]->lexeme, current_node->token->lexeme) == 0)
         {
-          c_type = (*token_array)[i]->c_type;
+          c_type = token_array[i]->c_type;
           break;
         }
       }
@@ -258,7 +292,69 @@ void process_node(TreeNode *current_node, State *current_state,
       {
         write_to_file("\"%c\", ");
       }
-      else if ((strcmp(c_type, "char[]")))
+      else if ((strcmp(c_type, "char []")))
+      {
+        write_to_file("\"%s\", ");
+      }
+
+      write_to_file(temp_node->token->lexeme);
+      write_to_file("[");
+      write_to_file(current_node->token->lexeme);
+      write_to_file("]");
+      write_to_file(")");
+      /* make temp node point to null*/
+      temp_node = NULL;
+      return;
+    }
+    /* Literal */
+    else if (strcmp(current_node->label, "Literal") == 0)
+    {
+      if (strcmp(current_node->token->c_type, "int") == 0)
+      {
+        write_to_file("\"%d\", ");
+      }
+      else if (strcmp(current_node->token->c_type, "float") == 0)
+      {
+        write_to_file("\"%f\", ");
+      }
+      else if ((strcmp(current_node->token->c_type, "char") == 0))
+      {
+        write_to_file("\"%c\", ");
+      }
+      else if ((strcmp(current_node->token->c_type, "char []") == 0))
+      {
+        write_to_file("\"%s\", ");
+      }
+      write_to_file(current_node->token->lexeme);
+      write_to_file(")");
+      return;
+    }
+    /* Identifier */
+    else if (strcmp(current_node->label, "Identifier") == 0)
+    {
+      char *c_type;
+      int i;
+      for (i = 0; i < *token_count; i++)
+      {
+        if (strcmp(token_array[i]->lexeme, current_node->token->lexeme) == 0)
+        {
+          c_type = token_array[i]->c_type;
+          break;
+        }
+      }
+      if (strcmp(c_type, "int") == 0)
+      {
+        write_to_file("\"%d\", ");
+      }
+      else if (strcmp(c_type, "float") == 0)
+      {
+        write_to_file("\"%f\", ");
+      }
+      else if ((strcmp(c_type, "char") == 0))
+      {
+        write_to_file("\"%c\", ");
+      }
+      else if ((strcmp(c_type, "char []")))
       {
         write_to_file("\"%s\", ");
       }
@@ -331,6 +427,8 @@ void process_node(TreeNode *current_node, State *current_state,
       write_to_file("; ");
       write_to_file(temp_node->token->lexeme);
       write_to_file("++)");
+      /* store temp node lexeme to write temp_node_lexeme[curr_node_lexeme]*/
+      *temp_node = *current_node;
     }
   }
 
@@ -464,11 +562,10 @@ void set_state(State *current_state, TreeNode *current_node)
 {
   if (strcmp(current_node->label, "Program") == 0)
   {
-    *current_state = WRITE_INCLUDES;
+    *current_state = WRITE_GLOBAL_VARS;
   }
   else if (strcmp(current_node->label, "FunctionDefinition") == 0)
   {
-    printf("Setting state to write function definition\n");
     *current_state = WRITE_FN_DEF;
   }
   else if (strcmp(current_node->label, "IfStatement") == 0)
@@ -533,11 +630,13 @@ void write_c_file(TreeNode *root)
   TreeNode *temp_node = (TreeNode *)malloc(sizeof(TreeNode));
   Token **token_array = (Token **)malloc(sizeof(Token));
   int token_count = 0;
+  NodeQueue *queue = createNodeQueue(MAX_NODES);
 
   clear_file("output.c");
   clear_file("output.h");
 
-  traverse_tree(root, &initial_state, temp_node, &token_array, &token_count);
+  traverse_tree(root, &initial_state, temp_node, token_array, &token_count,
+                queue);
 }
 
 /* helper function to clear output.c */
@@ -581,6 +680,58 @@ void write_at_start(char *content)
   fprintf(file, "%s", content);
 
   fclose(file);
+}
+
+void write_main(NodeQueue *queue, State *current_state, TreeNode *temp_node,
+                Token **token_array, int *token_count, TreeNode *current_node)
+{
+  TreeNode *node;
+  write_to_file("int main() {\n");
+  /* iterate through queue and write */
+  while (isNodeQueueEmpty(queue) != 1)
+  {
+    node = dequeueNode(queue);
+    printf("Node: %s\n", node->label);
+    write_indent(4);
+    write_main_helper(queue, current_state, temp_node, token_array, token_count,
+                      node);
+  }
+  write_to_file("return 0; \n}\n");
+}
+void write_main_helper(NodeQueue *queue, State *current_state,
+                       TreeNode *temp_node, Token **token_array,
+                       int *token_count, TreeNode *node)
+{
+  int i;
+  set_state(current_state, node);
+  process_node(node, current_state, temp_node, token_array, token_count, queue);
+  if (node->num_children == 0)
+  {
+    return;
+  }
+  for (i = 0; i < node->num_children; i++)
+  {
+    /* implement lookahead */
+    if (i > 0 && strcmp(node->children[i - 1]->label, "Parameter") == 0 &&
+        strcmp(node->children[i]->label, "Parameter") == 0)
+    {
+      write_to_file(", ");
+      if (strcmp(node->label, "FunctionDefinition") == 0)
+      {
+        write_to_header_file(", ");
+      }
+    }
+
+    write_main_helper(queue, current_state, temp_node, token_array, token_count,
+                      node->children[i]);
+  }
+  /* On recursion exit write closing brackets */
+  if (strcmp(node->label, "Block") == 0)
+  {
+    write_indent(node->token->num_indentation);
+
+    write_to_file("}\n");
+  }
 }
 
 /* helper function to write to "output.c" */
