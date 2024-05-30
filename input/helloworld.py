@@ -12,4 +12,5 @@ print_function(1, 2)
 
 x = 3
 z = "hel"
+print(x)
 print(z)
